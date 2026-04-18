@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eugene's Archives — Reader</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="index.html" class="back-to-catalog">📚 Eugene's Archives — Back to Library</a>
+      <h1 id="readerTitle">Loading...</h1>
+      <div class="subtitle" id="readerSubtitle"></div>
+    </div>
+
+    <div class="sidebar-nav"></div>
+
+    <div class="sidebar-footer">
+      <div class="font-controls">
+        <span class="font-label">Font</span>
+        <button class="font-btn" onclick="changeFontSize(-1)">A−</button>
+        <button class="font-btn" onclick="changeFontSize(1)">A+</button>
+        <button class="lang-btn" onclick="app.switchLang()" title="Switch language"><span class="lang-flag"></span></button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+      <div class="progress-text">Cover</div>
+    </div>
+  </aside>
+
+  <main class="reader">
+    <div class="reader-content"></div>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <script src="embedded_data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    function openLightbox(src) {
+      var lb = document.getElementById('lightbox');
+      var img = document.getElementById('lightboxImg');
+      img.src = src;
+      lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      var lb = document.getElementById('lightbox');
+      lb.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+    // Delegate clicks on images inside reader
+    document.addEventListener('click', function(e) {
+      var img = e.target;
+      if (img.tagName === 'IMG' && img.closest('.reader-content')) {
+        e.preventDefault();
+        openLightbox(img.src);
+      }
+    });
+  </script>
+</body>
+</html>
