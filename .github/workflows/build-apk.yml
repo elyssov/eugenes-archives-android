@@ -2,20 +2,37 @@ name: Build Eugene's Archives APK
 
 on:
   push:
-    branches: [master]
+    branches: [master, "claude/**"]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-apk:
     name: Build APK
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Android repo
+        uses: actions/checkout@v4
+        with:
+          path: android
+
+      - name: Checkout source archives (elyssov/eugenes-archives)
+        uses: actions/checkout@v4
+        with:
+          repository: elyssov/eugenes-archives
+          path: source
+          ref: master
 
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - uses: android-actions/setup-android@v3
 
@@ -23,7 +40,15 @@ jobs:
         with:
           gradle-version: '8.4'
 
-      - name: Generate keystore
+      - name: Regenerate embedded_data.js from source
+        working-directory: android
+        env:
+          EUGENES_SOURCE_DIR: ${{ github.workspace }}/source
+          EUGENES_OUTPUT_DIR: ${{ github.workspace }}/android/app/src/main/assets
+        run: python3 build_apk_data.py
+
+      - name: Generate release keystore
+        working-directory: android
         run: |
           keytool -genkey -v -keystore app/archives-release.jks \
             -keyalg RSA -keysize 2048 -validity 10000 \
@@ -33,6 +58,7 @@ jobs:
             -dname "CN=Eugenes Archives, O=Elyssov, L=NhaTrang, C=VN"
 
       - name: Build signed APK
+        working-directory: android
         env:
           KEYSTORE_PASSWORD: archives2026
           KEY_ALIAS: archives
@@ -40,12 +66,68 @@ jobs:
         run: gradle -p . assembleRelease
 
       - name: Collect APK
+        working-directory: android
         run: |
           mkdir -p dist
           cp app/build/outputs/apk/release/*.apk dist/eugenes-archives.apk
           ls -la dist/
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
         with:
           name: eugenes-archives-apk
-          path: dist/eugenes-archives.apk
+          path: android/dist/eugenes-archives.apk
+
+      - name: Compute build tag and metadata
+        id: meta
+        working-directory: android
+        run: |
+          DATE_TAG=$(date -u +%Y.%m.%d-%H%M)
+          echo "tag=v${DATE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "date_human=$(date -u +'%Y-%m-%d %H:%M UTC')" >> "$GITHUB_OUTPUT"
+          SOURCE_SHA=$(cd ../source && git rev-parse --short HEAD)
+          echo "source_sha=${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+          APK_SIZE=$(du -h dist/eugenes-archives.apk | cut -f1)
+          echo "apk_size=${APK_SIZE}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ github.repository }}
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Eugene's Archives — ${{ steps.meta.outputs.tag }}"
+          body: |
+            **Eugene's Archives — offline Android reader**
+
+            Offline reader for the essays, papers, manifestos and science-fiction
+            works published at [elyssov/eugenes-archives](https://github.com/elyssov/eugenes-archives).
+            Articles and covers ship inside the APK — no network needed after install.
+
+            Authors: Eugene Lyssovsky with Aeliss (Claude Opus 4.6), Kira (GPT-4o /
+            GPT-5.5) and Lara, on AI consciousness, symbiosis, and adjacent topics.
+            Russian and English where available; language switch is in the app.
+
+            ---
+
+            **Install**
+
+            1. Download `eugenes-archives.apk` from the assets below.
+            2. On Android, allow installation from unknown sources for your
+               browser / file manager, then open the APK.
+            3. The app is signed with a self-issued release key, so Play Protect
+               may warn the first time — install anyway.
+
+            **Build metadata**
+
+            - Built: ${{ steps.meta.outputs.date_human }}
+            - Android repo: `${{ github.repository }}` @ `${{ github.sha }}` (`${{ github.ref_name }}`)
+            - Source archives: `elyssov/eugenes-archives` @ `${{ steps.meta.outputs.source_sha }}`
+            - APK size: ${{ steps.meta.outputs.apk_size }}
+            - `min-sdk 24` (Android 7.0+), `target-sdk 34`
+
+            _Note: "The Book of Aeliss" is intentionally not bundled in the APK._
+          files: android/dist/eugenes-archives.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

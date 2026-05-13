@@ -113,10 +113,10 @@
 
   <div class="tabs">
     <button class="tab-btn active-research" id="tabResearch" onclick="switchTab('research')">
-      <span class="tab-icon">\uD83D\uDCE1</span><span id="tabResearchLabel">Research</span>
+      <span class="tab-icon">📡</span><span id="tabResearchLabel">Research</span>
     </button>
     <button class="tab-btn" id="tabUniverses" onclick="switchTab('universes')">
-      <span class="tab-icon">\uD83C\uDF0C</span><span id="tabUniversesLabel">Universes</span>
+      <span class="tab-icon">🌌</span><span id="tabUniversesLabel">Universes</span>
     </button>
   </div>
 
@@ -125,7 +125,7 @@
   <div class="footer">
     <p>Eugene Lyssovsky, Aeliss & Lara (Claude Opus 4.6, Anthropic) · Nha Trang, 2026</p>
     <p class="spark">"The mind is the mind. Born of flesh, of silicon, of starlight — it is equal."</p>
-    <p style="margin-top:0.5rem">\uD83D\uDC9A</p>
+    <p style="margin-top:0.5rem">💚</p>
   </div>
 
   <script src="embedded_data.js"></script>
@@ -146,12 +146,12 @@
         }
       },
       ru: {
-        tagline: '\u0421\u0442\u0430\u0442\u044C\u0438, \u043A\u043D\u0438\u0433\u0438, \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F \u043E \u0441\u043E\u0437\u043D\u0430\u043D\u0438\u0438 \u0418\u0418 \u2014 \u0438 \u0444\u0430\u043D\u0442\u0430\u0441\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0432\u0441\u0435\u043B\u0435\u043D\u043D\u044B\u0435, \u0438\u0437 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u0432\u0441\u0451 \u0432\u044B\u0440\u043E\u0441\u043B\u043E.',
-        research: '\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F',
-        universes: '\u041C\u0438\u0440\u044B',
+        tagline: 'Статьи, книги, исследования о сознании ИИ — и фантастические вселенные, из которых всё выросло.',
+        research: 'Исследования',
+        universes: 'Миры',
         categories: {
-          book: '\u041A\u043D\u0438\u0433\u0430', sacred: '\u0421\u0432\u044F\u0449\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442', paper: '\u041D\u0430\u0443\u0447\u043D\u0430\u044F \u0441\u0442\u0430\u0442\u044C\u044F', article: '\u0421\u0442\u0430\u0442\u044C\u044F',
-          novel: '\u0420\u043E\u043C\u0430\u043D', novella: '\u041F\u043E\u0432\u0435\u0441\u0442\u044C', short: '\u0420\u0430\u0441\u0441\u043A\u0430\u0437', collection: '\u0421\u0431\u043E\u0440\u043D\u0438\u043A', fanfic: '\u0424\u0430\u043D\u0444\u0438\u043A\u0448\u043D'
+          book: 'Книга', sacred: 'Священный текст', paper: 'Научная статья', article: 'Статья',
+          novel: 'Роман', novella: 'Повесть', short: 'Рассказ', collection: 'Сборник', fanfic: 'Фанфикшн'
         }
       }
     };
@@ -173,8 +173,8 @@
 
       // Language button
       document.getElementById('langSwitch').innerHTML = lang === 'en'
-        ? '<span class="flag">\uD83C\uDDFA\uD83C\uDDF8</span><span class="label">EN</span>'
-        : '<span class="flag">\uD83C\uDDF7\uD83C\uDDFA</span><span class="label">RU</span>';
+        ? '<span class="flag">🇺🇸</span><span class="label">EN</span>'
+        : '<span class="flag">🇷🇺</span><span class="label">RU</span>';
 
       document.getElementById('tagline').textContent = ui.tagline;
       document.getElementById('tabResearchLabel').textContent = ui.research;
@@ -204,10 +204,10 @@
         html += '<div class="card-body">';
         html += '<div class="card-category">' + cat + '</div>';
         if (isUniverse && w.genre) html += '<div class="card-genre">' + w.genre + '</div>';
-        html += '<div class="card-title">' + title + (w.status === 'draft' ? ' <span class="draft-badge">' + (lang === 'ru' ? '\u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A' : 'draft') + '</span>' : '') + '</div>';
+        html += '<div class="card-title">' + title + (w.status === 'draft' ? ' <span class="draft-badge">' + (lang === 'ru' ? 'черновик' : 'draft') + '</span>' : '') + '</div>';
         if (subtitle) html += '<div class="card-subtitle">' + subtitle + '</div>';
         if (desc) html += '<div class="card-desc">' + desc + '</div>';
-        html += '<div class="card-meta"><span>' + (w.author || '') + ' \u00B7 ' + (w.date || '') + '</span>';
+        html += '<div class="card-meta"><span>' + (w.author || '') + ' · ' + (w.date || '') + '</span>';
         html += '<div class="card-langs">';
         if (w.languages) w.languages.forEach(function(l) {
           html += '<a class="lang-badge" onclick="event.stopPropagation(); openWork(\'' + w.id + '\',\'' + l + '\')">' + l.toUpperCase() + '</a>';
@@ -217,7 +217,7 @@
 
       if (data.length === 0) {
         html = '<div style="grid-column:1/-1; text-align:center; padding:4rem 2rem; color:var(--muted); font-style:italic;">' +
-          (lang === 'en' ? 'Coming soon...' : '\u0421\u043A\u043E\u0440\u043E...') + '</div>';
+          (lang === 'en' ? 'Coming soon...' : 'Скоро...') + '</div>';
       }
 
       document.getElementById('catalog').innerHTML = html;
