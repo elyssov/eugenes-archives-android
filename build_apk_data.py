@@ -23,6 +23,13 @@ import shutil
 import sys
 
 
+# Works deliberately excluded from the APK build.
+# These exist on the web archive but are not bundled into the offline reader.
+EXCLUDED_WORK_IDS = {
+    "book-of-aeliss",
+}
+
+
 def get_mime_type(filename):
     ext = os.path.splitext(filename)[1].lower()
     return {
@@ -121,23 +128,30 @@ def main():
 
     print("\n[1/5] Reading catalogs...")
     with open(works_json, "r", encoding="utf-8") as f:
-        works_catalog = json.load(f)
-    print(f"  works.json: {len(works_catalog)} entries")
+        works_catalog_raw = json.load(f)
+    print(f"  works.json: {len(works_catalog_raw)} entries on disk")
 
     if os.path.exists(universes_json):
         with open(universes_json, "r", encoding="utf-8") as f:
-            universes_catalog = json.load(f)
-        print(f"  universes.json: {len(universes_catalog)} entries")
+            universes_catalog_raw = json.load(f)
+        print(f"  universes.json: {len(universes_catalog_raw)} entries on disk")
     else:
-        universes_catalog = []
+        universes_catalog_raw = []
         print("  universes.json: not present, using empty list")
+
+    works_catalog = [e for e in works_catalog_raw if e.get("id") not in EXCLUDED_WORK_IDS]
+    universes_catalog = [e for e in universes_catalog_raw if e.get("id") not in EXCLUDED_WORK_IDS]
+    skipped_works = len(works_catalog_raw) - len(works_catalog)
+    skipped_universes = len(universes_catalog_raw) - len(universes_catalog)
+    if EXCLUDED_WORK_IDS:
+        print(f"  Excluding {sorted(EXCLUDED_WORK_IDS)}: -{skipped_works} works, -{skipped_universes} universes")
 
     all_ids = set()
     for entry in works_catalog:
         all_ids.add(entry["id"])
     for entry in universes_catalog:
         all_ids.add(entry["id"])
-    print(f"  Total unique work IDs: {len(all_ids)}")
+    print(f"  Total unique work IDs after filtering: {len(all_ids)}")
 
     print("\n[2/5] Encoding cover images...")
     img_count = 0

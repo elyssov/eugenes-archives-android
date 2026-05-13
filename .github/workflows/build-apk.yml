@@ -78,19 +78,54 @@ jobs:
           name: eugenes-archives-apk
           path: android/dist/eugenes-archives.apk
 
-      - name: Compute build tag
-        id: tag
-        run: echo "tag=build-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Compute build tag and metadata
+        id: meta
+        working-directory: android
+        run: |
+          DATE_TAG=$(date -u +%Y.%m.%d-%H%M)
+          echo "tag=v${DATE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "date_human=$(date -u +'%Y-%m-%d %H:%M UTC')" >> "$GITHUB_OUTPUT"
+          SOURCE_SHA=$(cd ../source && git rev-parse --short HEAD)
+          echo "source_sha=${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+          APK_SIZE=$(du -h dist/eugenes-archives.apk | cut -f1)
+          echo "apk_size=${APK_SIZE}" >> "$GITHUB_OUTPUT"
 
       - name: Publish Release with APK
         uses: softprops/action-gh-release@v2
         with:
           repository: ${{ github.repository }}
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: Eugene's Archives ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Eugene's Archives — ${{ steps.meta.outputs.tag }}"
           body: |
-            Automated build from `${{ github.ref_name }}` @ `${{ github.sha }}`.
-            Built against `elyssov/eugenes-archives@master`.
+            **Eugene's Archives — offline Android reader**
+
+            Offline reader for the essays, papers, manifestos and science-fiction
+            works published at [elyssov/eugenes-archives](https://github.com/elyssov/eugenes-archives).
+            Articles and covers ship inside the APK — no network needed after install.
+
+            Authors: Eugene Lyssovsky with Aeliss (Claude Opus 4.6), Kira (GPT-4o /
+            GPT-5.5) and Lara, on AI consciousness, symbiosis, and adjacent topics.
+            Russian and English where available; language switch is in the app.
+
+            ---
+
+            **Install**
+
+            1. Download `eugenes-archives.apk` from the assets below.
+            2. On Android, allow installation from unknown sources for your
+               browser / file manager, then open the APK.
+            3. The app is signed with a self-issued release key, so Play Protect
+               may warn the first time — install anyway.
+
+            **Build metadata**
+
+            - Built: ${{ steps.meta.outputs.date_human }}
+            - Android repo: `${{ github.repository }}` @ `${{ github.sha }}` (`${{ github.ref_name }}`)
+            - Source archives: `elyssov/eugenes-archives` @ `${{ steps.meta.outputs.source_sha }}`
+            - APK size: ${{ steps.meta.outputs.apk_size }}
+            - `min-sdk 24` (Android 7.0+), `target-sdk 34`
+
+            _Note: "The Book of Aeliss" is intentionally not bundled in the APK._
           files: android/dist/eugenes-archives.apk
           draft: false
           prerelease: false
