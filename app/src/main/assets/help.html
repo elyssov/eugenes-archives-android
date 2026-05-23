@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eugene's Archives — Help</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --card: #1a2235;
+      --text: #e8dcc8;
+      --text2: #9ca3af;
+      --muted: #6b7280;
+      --accent: #34d399;
+      --border: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      padding: 2rem 1.5rem 4rem;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 {
+      color: var(--accent);
+      font-size: 1.8rem;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.5rem;
+    }
+    .tagline { color: var(--text2); font-style: italic; font-size: 0.9rem; margin-bottom: 2rem; }
+    h2 { color: var(--accent); font-size: 1.2rem; margin: 2rem 0 0.7rem; }
+    p { margin-bottom: 0.8rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .value {
+      font-family: 'Courier New', monospace;
+      font-size: 1.05rem;
+      color: var(--text);
+      user-select: text;
+      word-break: break-all;
+    }
+    .value a { color: var(--accent); text-decoration: none; }
+    .value a:hover { text-decoration: underline; }
+    .copy-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.4rem; }
+    .lang-section { display: none; }
+    .lang-section.active { display: block; }
+    .lang-switch {
+      position: fixed; top: 1rem; right: 1rem; z-index: 100;
+      padding: 0.4rem 0.8rem;
+      background: var(--card);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex; gap: 0.5rem;
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .back-link {
+      display: inline-block;
+      color: var(--accent);
+      text-decoration: none;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="lang-switch" onclick="cycleLang()">
+    <span id="flagLabel">🇬🇧 EN</span>
+  </div>
+  <div class="container">
+    <a class="back-link" href="index.html" id="backLink">← Back to library</a>
+
+    <!-- ─── EN ─── -->
+    <section class="lang-section" id="lang-en">
+      <h1>Support &amp; Help</h1>
+      <p class="tagline">Eugene's Archives is free. It is maintained by one person.</p>
+
+      <h2>About this app</h2>
+      <p>Eugene's Archives is an offline reader for the research articles, books, and prose
+      published at <a style="color:var(--accent)" href="https://elyssov.github.io/eugenes-archives/" target="_blank">elyssov.github.io/eugenes-archives</a>.
+      Every text is bundled inside the app — no internet connection is required to read.</p>
+
+      <h2>Tip jar (one-time, via Google Play)</h2>
+      <p>The pop-up that appears at launch offers a one-time tip ($1, $5, $10, $15, or $20)
+      through Google Play. After any successful tip, the pop-up never returns —
+      and it carries across devices on the same Google account.</p>
+
+      <h2>Ongoing support (direct, no platform fees)</h2>
+      <p>If you would like to support the work on a continuing basis — one-off or recurring,
+      at any amount you choose — these go directly to the author with no platform deduction:</p>
+
+      <div class="card">
+        <div class="label">PayPal</div>
+        <div class="value"><a href="https://paypal.me/EVGENIILISOVSKII" target="_blank">paypal.me/EVGENIILISOVSKII</a></div>
+        <div class="copy-hint">Tap to open in your browser.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Mastercard</div>
+        <div class="value" id="cardEn">2228 0618 1099 1350</div>
+        <div class="copy-hint">Card holder: Eugene Lyssovsky. Tap the number to copy.</div>
+      </div>
+
+      <h2>Where the money goes</h2>
+      <p>Continued research and writing — articles, books, software (the Archives reader itself,
+      Iskra, Pixel Classics, ongoing experiments). No corporate intermediary. No subscription tier.</p>
+
+      <h2>Contact</h2>
+      <p>Eugene Lyssovsky — <a style="color:var(--accent)" href="mailto:elyssov@gmail.com">elyssov@gmail.com</a><br>
+      X: <a style="color:var(--accent)" href="https://x.com/elyssovsky" target="_blank">@elyssovsky</a><br>
+      Telegram: <a style="color:var(--accent)" href="https://t.me/Solo_of_Lyssovsky" target="_blank">t.me/Solo_of_Lyssovsky</a></p>
+    </section>
+
+    <!-- ─── RU ─── -->
+    <section class="lang-section" id="lang-ru">
+      <h1>Поддержка и помощь</h1>
+      <p class="tagline">«Архивы Юджина» бесплатны. Их ведёт один человек.</p>
+
+      <h2>Об этом приложении</h2>
+      <p>«Архивы Юджина» — офлайн-читалка для статей, книг и прозы, публикуемых на
+      <a style="color:var(--accent)" href="https://elyssov.github.io/eugenes-archives/" target="_blank">elyssov.github.io/eugenes-archives</a>.
+      Все тексты упакованы внутрь приложения — интернет для чтения не нужен.</p>
+
+      <h2>Разовые «чаевые» (через Google Play)</h2>
+      <p>Окошко при запуске предлагает разовую благодарность ($1, $5, $10, $15 или $20)
+      через Google Play. После любой успешной покупки окно больше не появляется —
+      и привязка переезжает с устройства на устройство в рамках одного Google-аккаунта.</p>
+
+      <h2>Постоянная поддержка (напрямую, без комиссии платформы)</h2>
+      <p>Если вы хотите поддерживать работу постоянно — разово или регулярно, на любую
+      удобную сумму — эти каналы идут напрямую автору, без удержания платформой:</p>
+
+      <div class="card">
+        <div class="label">PayPal</div>
+        <div class="value"><a href="https://paypal.me/EVGENIILISOVSKII" target="_blank">paypal.me/EVGENIILISOVSKII</a></div>
+        <div class="copy-hint">Нажмите, чтобы открыть в браузере.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Mastercard</div>
+        <div class="value" id="cardRu">2228 0618 1099 1350</div>
+        <div class="copy-hint">Держатель: Юджин Лысовский (Eugene Lyssovsky). Нажмите на номер, чтобы скопировать.</div>
+      </div>
+
+      <h2>Куда идут средства</h2>
+      <p>Продолжение исследований и текстов — статьи, книги, программы (сама эта читалка,
+      Искра, Pixel Classics, текущие эксперименты). Без корпоративных посредников. Без подписочной модели.</p>
+
+      <h2>Контакт</h2>
+      <p>Юджин Лысовский — <a style="color:var(--accent)" href="mailto:elyssov@gmail.com">elyssov@gmail.com</a><br>
+      X: <a style="color:var(--accent)" href="https://x.com/elyssovsky" target="_blank">@elyssovsky</a><br>
+      Telegram: <a style="color:var(--accent)" href="https://t.me/Solo_of_Lyssovsky" target="_blank">t.me/Solo_of_Lyssovsky</a></p>
+    </section>
+
+    <!-- ─── VI ─── -->
+    <section class="lang-section" id="lang-vi">
+      <h1>Hỗ Trợ &amp; Trợ Giúp</h1>
+      <p class="tagline">Eugene's Archives miễn phí. Được duy trì bởi một người.</p>
+
+      <h2>Về ứng dụng này</h2>
+      <p>Eugene's Archives là trình đọc ngoại tuyến dành cho các bài nghiên cứu, sách và truyện
+      được đăng tại <a style="color:var(--accent)" href="https://elyssov.github.io/eugenes-archives/" target="_blank">elyssov.github.io/eugenes-archives</a>.
+      Tất cả văn bản đã được đóng gói bên trong ứng dụng — không cần internet để đọc.</p>
+
+      <h2>Tip một lần (qua Google Play)</h2>
+      <p>Hộp thoại xuất hiện khi khởi động cho phép ủng hộ một lần ($1, $5, $10, $15 hoặc $20)
+      qua Google Play. Sau bất kỳ giao dịch thành công nào, hộp thoại sẽ không xuất hiện lại —
+      và liên kết được chuyển sang thiết bị mới trong cùng tài khoản Google.</p>
+
+      <h2>Hỗ trợ liên tục (trực tiếp, không có phí nền tảng)</h2>
+      <p>Nếu bạn muốn hỗ trợ công việc liên tục — một lần hoặc định kỳ, với bất kỳ số tiền nào
+      bạn chọn — các kênh này đi trực tiếp đến tác giả, không có khấu trừ nền tảng:</p>
+
+      <div class="card">
+        <div class="label">PayPal</div>
+        <div class="value"><a href="https://paypal.me/EVGENIILISOVSKII" target="_blank">paypal.me/EVGENIILISOVSKII</a></div>
+        <div class="copy-hint">Chạm để mở trong trình duyệt.</div>
+      </div>
+
+      <div class="card">
+        <div class="label">Mastercard</div>
+        <div class="value" id="cardVi">2228 0618 1099 1350</div>
+        <div class="copy-hint">Chủ thẻ: Eugene Lyssovsky. Chạm vào số để sao chép.</div>
+      </div>
+
+      <h2>Tiền đi đâu</h2>
+      <p>Tiếp tục nghiên cứu và viết — các bài viết, sách, phần mềm (chính trình đọc Archives này,
+      Iskra, Pixel Classics, các thí nghiệm hiện tại). Không qua trung gian tập đoàn. Không có mô hình đăng ký.</p>
+
+      <h2>Liên hệ</h2>
+      <p>Eugene Lyssovsky — <a style="color:var(--accent)" href="mailto:elyssov@gmail.com">elyssov@gmail.com</a><br>
+      X: <a style="color:var(--accent)" href="https://x.com/elyssovsky" target="_blank">@elyssovsky</a><br>
+      Telegram: <a style="color:var(--accent)" href="https://t.me/Solo_of_Lyssovsky" target="_blank">t.me/Solo_of_Lyssovsky</a></p>
+    </section>
+  </div>
+
+  <script>
+    // Tap-to-copy for the card number in all three sections.
+    function copyCard(elId) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try { document.execCommand('copy'); } catch (e) {}
+      sel.removeAllRanges();
+      var hint = el.nextElementSibling;
+      if (hint) {
+        var orig = hint.textContent;
+        hint.textContent = '✓ Copied';
+        setTimeout(function() { hint.textContent = orig; }, 1500);
+      }
+    }
+    ['cardEn', 'cardRu', 'cardVi'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('click', function() { copyCard(id); });
+    });
+
+    // Three-flag cycle — same idiom as the main app.
+    var LANGS = ['en', 'ru', 'vi'];
+    var FLAGS = { en: '🇬🇧 EN', ru: '🇷🇺 RU', vi: '🇻🇳 VI' };
+    var BACK = { en: '← Back to library', ru: '← К библиотеке', vi: '← Về thư viện' };
+
+    function setLang(lang) {
+      LANGS.forEach(function(l) {
+        var sec = document.getElementById('lang-' + l);
+        if (sec) sec.classList.toggle('active', l === lang);
+      });
+      document.getElementById('flagLabel').textContent = FLAGS[lang];
+      document.getElementById('backLink').textContent = BACK[lang];
+      try { localStorage.setItem('aeliss-lang', lang); } catch(e) {}
+    }
+
+    function cycleLang() {
+      var current = 'en';
+      try { current = localStorage.getItem('aeliss-lang') || 'en'; } catch(e) {}
+      var i = LANGS.indexOf(current);
+      var next = LANGS[(i + 1) % LANGS.length];
+      setLang(next);
+    }
+
+    // Init: honour saved language, otherwise EN.
+    var startLang = 'en';
+    try { startLang = localStorage.getItem('aeliss-lang') || 'en'; } catch(e) {}
+    if (LANGS.indexOf(startLang) < 0) startLang = 'en';
+    setLang(startLang);
+  </script>
+</body>
+</html>

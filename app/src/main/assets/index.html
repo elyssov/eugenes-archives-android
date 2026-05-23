@@ -36,6 +36,16 @@
     .lang-switch .label { font-size: 0.75rem; }
     .lang-switch:hover { transform: scale(1.05); background: var(--glow); }
 
+    /* Help link — sits left of the language switch, same height */
+    .help-link {
+      position: fixed; top: 1rem; right: 5.5rem; z-index: 100;
+      padding: 0.5rem 0.85rem; background: var(--card); border: 2px solid var(--accent);
+      border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 12px rgba(52,211,153,0.2);
+      color: var(--accent); font-family: inherit; font-weight: 600; text-decoration: none;
+    }
+    .help-link:hover { transform: scale(1.05); background: var(--glow); }
+
     /* TABS */
     .tabs {
       display: flex; justify-content: center; gap: 0; margin: 0 auto 0;
@@ -104,6 +114,7 @@
 </head>
 <body>
 
+  <a class="help-link" href="help.html" title="Help / Support">?</a>
   <button class="lang-switch" id="langSwitch" onclick="toggleLang()" title="Switch interface language"></button>
 
   <div class="header">

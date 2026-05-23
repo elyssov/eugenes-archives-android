@@ -51,4 +51,10 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.webkit:webkit:1.10.0")
+
+    // Google Play Billing — for the optional tip-jar pop-up at launch.
+    // Five consumable SKUs (tip_1, tip_5, tip_10, tip_15, tip_20). After
+    // ANY successful tip the prompt never returns; restore works through
+    // queryPurchasesAsync(INAPP) on every launch (carries to a new device).
+    implementation("com.android.billingclient:billing-ktx:6.1.0")
 }
