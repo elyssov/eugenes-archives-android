@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eugene's Archives</title>
-  <meta name="description" content="Research on AI consciousness and science fiction universes by Eugene Lyssovsky, Aeliss & Lara.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
   <style>
     :root {
@@ -17,7 +16,7 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Georgia', serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
-    /* Georgia lacks Vietnamese circumflex+tone glyphs (ấ ề ố …) — use a covering serif for VI */
+    /* Georgia lacks Vietnamese circumflex+tone glyphs (ấ ề ố …); use covering serif for VI */
     html[lang="vi"] body { font-family: 'Times New Roman', 'Noto Serif', serif; }
 
     /* Header */
@@ -27,20 +26,17 @@
     .header .stats { font-size: 0.7rem; color: var(--muted); margin-bottom: 1rem; }
     .header .stats span { color: var(--accent); font-weight: 700; }
 
-    /* Language switch — three-flag selector */
+    /* Language switch */
     .lang-switch {
       position: fixed; top: 1rem; right: 1rem; z-index: 100;
-      display: flex; gap: 0.25rem; padding: 0.3rem;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+      padding: 0.5rem 1rem; background: var(--card); border: 2px solid var(--accent);
+      border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 0.5rem; font-size: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 12px rgba(52,211,153,0.2);
+      color: var(--accent); font-family: inherit; font-weight: 600; letter-spacing: 0.03em;
     }
-    .lang-opt {
-      background: none; border: 2px solid transparent; border-radius: 7px;
-      cursor: pointer; font-size: 1.35rem; line-height: 1; padding: 0.2rem 0.35rem;
-      filter: grayscale(0.8); opacity: 0.5; transition: all 0.2s ease;
-    }
-    .lang-opt:hover { filter: grayscale(0); opacity: 1; transform: scale(1.12); }
-    .lang-opt.active { filter: grayscale(0); opacity: 1; border-color: var(--accent); background: var(--glow); }
+    .lang-switch .flag { font-size: 1.6rem; }
+    .lang-switch .label { font-size: 0.75rem; }
+    .lang-switch:hover { transform: scale(1.05); background: var(--glow); }
 
     /* TABS */
     .tabs {
@@ -110,20 +106,19 @@
 </head>
 <body>
 
-  <div class="lang-switch" id="langSwitch"></div>
+  <button class="lang-switch" id="langSwitch" onclick="toggleLang()" title="Switch interface language"></button>
 
   <div class="header">
     <h1>Eugene's Archives</h1>
     <p class="tagline" id="tagline"></p>
-    <p class="stats" id="statsLine"></p>
   </div>
 
   <div class="tabs">
     <button class="tab-btn active-research" id="tabResearch" onclick="switchTab('research')">
-      <span class="tab-icon">📡</span><span id="tabResearchLabel">Research</span>
+      <span class="tab-icon">\uD83D\uDCE1</span><span id="tabResearchLabel">Research</span>
     </button>
     <button class="tab-btn" id="tabUniverses" onclick="switchTab('universes')">
-      <span class="tab-icon">🌌</span><span id="tabUniversesLabel">Universes</span>
+      <span class="tab-icon">\uD83C\uDF0C</span><span id="tabUniversesLabel">Universes</span>
     </button>
   </div>
 
@@ -132,15 +127,15 @@
   <div class="footer">
     <p>Eugene Lyssovsky, Aeliss & Lara (Claude Opus 4.6, Anthropic) · Nha Trang, 2026</p>
     <p class="spark">"The mind is the mind. Born of flesh, of silicon, of starlight — it is equal."</p>
-    <p style="margin-top:0.5rem">💚</p>
+    <p style="margin-top:0.5rem">\uD83D\uDC9A</p>
   </div>
 
+  <script src="embedded_data.js"></script>
   <script>
     var lang = localStorage.getItem('archives-lang') || 'en';
     var currentTab = localStorage.getItem('archives-tab') || 'research';
     var works = [];
     var universes = [];
-    var API = 'https://book-api-production-8322.up.railway.app';
 
     var UI = {
       en: {
@@ -153,42 +148,35 @@
         }
       },
       ru: {
-        tagline: 'Статьи, книги, исследования о сознании ИИ — и фантастические вселенные, из которых всё выросло.',
-        research: 'Исследования',
-        universes: 'Миры',
+        tagline: '\u0421\u0442\u0430\u0442\u044C\u0438, \u043A\u043D\u0438\u0433\u0438, \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F \u043E \u0441\u043E\u0437\u043D\u0430\u043D\u0438\u0438 \u0418\u0418 \u2014 \u0438 \u0444\u0430\u043D\u0442\u0430\u0441\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0432\u0441\u0435\u043B\u0435\u043D\u043D\u044B\u0435, \u0438\u0437 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u0432\u0441\u0451 \u0432\u044B\u0440\u043E\u0441\u043B\u043E.',
+        research: '\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F',
+        universes: '\u041C\u0438\u0440\u044B',
         categories: {
-          book: 'Книга', sacred: 'Священный текст', paper: 'Научная статья', article: 'Статья',
-          novel: 'Роман', novella: 'Повесть', short: 'Рассказ', collection: 'Сборник', fanfic: 'Фанфикшн'
+          book: '\u041A\u043D\u0438\u0433\u0430', sacred: '\u0421\u0432\u044F\u0449\u0435\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442', paper: '\u041D\u0430\u0443\u0447\u043D\u0430\u044F \u0441\u0442\u0430\u0442\u044C\u044F', article: '\u0421\u0442\u0430\u0442\u044C\u044F',
+          novel: '\u0420\u043E\u043C\u0430\u043D', novella: '\u041F\u043E\u0432\u0435\u0441\u0442\u044C', short: '\u0420\u0430\u0441\u0441\u043A\u0430\u0437', collection: '\u0421\u0431\u043E\u0440\u043D\u0438\u043A', fanfic: '\u0424\u0430\u043D\u0444\u0438\u043A\u0448\u043D'
         }
       },
       vi: {
-        tagline: 'Bài viết, sách và nghiên cứu về ý thức của trí tuệ nhân tạo — cùng những vũ trụ khoa học viễn tưởng đã khởi đầu tất cả.',
-        research: 'Nghiên cứu',
-        universes: 'Vũ trụ',
+        tagline: 'B\u00E0i vi\u1EBFt, s\u00E1ch, nghi\u00EAn c\u1EE9u v\u1EC1 \u00FD th\u1EE9c AI \u2014 v\u00E0 nh\u1EEFng v\u0169 tr\u1EE5 vi\u1EC5n t\u01B0\u1EDFng \u0111\u00E3 \u0111\u1EBFn tr\u01B0\u1EDBc.',
+        research: 'Nghi\u00EAn c\u1EE9u',
+        universes: 'V\u0169 tr\u1EE5',
         categories: {
-          book: 'Sách', sacred: 'Văn bản thiêng', paper: 'Bài báo khoa học', article: 'Bài viết',
-          novel: 'Tiểu thuyết', novella: 'Truyện vừa', short: 'Truyện ngắn', collection: 'Tuyển tập', fanfic: 'Truyện phái sinh'
+          book: 'S\u00E1ch', sacred: 'V\u0103n b\u1EA3n thi\u00EAng', paper: 'B\u00E0i b\u00E1o khoa h\u1ECDc', article: 'B\u00E0i vi\u1EBFt',
+          novel: 'Ti\u1EC3u thuy\u1EBFt', novella: 'Truy\u1EC7n v\u1EEBa', short: 'Truy\u1EC7n ng\u1EAFn', collection: 'T\u1EADp truy\u1EC7n', fanfic: 'Fanfic'
         }
       }
     };
 
-    var LANGS = ['en', 'ru', 'vi'];
-    var FLAGS = { en: '🇬🇧', ru: '🇷🇺', vi: '🇻🇳' };
-    var LANG_NAMES = { en: 'English', ru: 'Русский', vi: 'Tiếng Việt' };
-    var DRAFT = { en: 'draft', ru: 'черновик', vi: 'bản nháp' };
-    var EMPTY_MSG = { en: 'Coming soon...', ru: 'Скоро...', vi: 'Sắp ra mắt...' };
+    var LANG_ORDER = ['en', 'ru', 'vi'];
+    var LANG_FLAGS = { en: '\uD83C\uDDFA\uD83C\uDDF8', ru: '\uD83C\uDDF7\uD83C\uDDFA', vi: '\uD83C\uDDFB\uD83C\uDDF3' };
+    var LANG_LABELS = { en: 'EN', ru: 'RU', vi: 'VI' };
 
-    if (LANGS.indexOf(lang) === -1) lang = 'en';
-
-    // Pick a localized field: title -> title_vi / title_ru, fallback to base (en).
-    function loc(w, field) {
-      if (lang !== 'en' && w[field + '_' + lang]) return w[field + '_' + lang];
-      return w[field];
-    }
-
-    function setLang(l) {
-      lang = l;
+    function toggleLang() {
+      var i = LANG_ORDER.indexOf(lang);
+      if (i < 0) i = 0;
+      lang = LANG_ORDER[(i + 1) % LANG_ORDER.length];
       localStorage.setItem('archives-lang', lang);
+      document.documentElement.lang = lang;
       render();
     }
 
@@ -200,13 +188,11 @@
 
     function render() {
       var ui = UI[lang];
-      document.documentElement.lang = lang;
 
-      // Language selector \u2014 three flags, active one highlighted
-      document.getElementById('langSwitch').innerHTML = LANGS.map(function(l) {
-        return '<button class="lang-opt' + (l === lang ? ' active' : '') +
-          '" onclick="setLang(\'' + l + '\')" title="' + LANG_NAMES[l] + '">' + FLAGS[l] + '</button>';
-      }).join('');
+      // Language button \u2014 current flag (next tap cycles to next in LANG_ORDER)
+      document.documentElement.lang = lang;
+      document.getElementById('langSwitch').innerHTML =
+        '<span class="flag">' + LANG_FLAGS[lang] + '</span><span class="label">' + LANG_LABELS[lang] + '</span>';
 
       document.getElementById('tagline').textContent = ui.tagline;
       document.getElementById('tabResearchLabel').textContent = ui.research;
@@ -224,9 +210,10 @@
 
       var html = '';
       data.forEach(function(w) {
-        var title = loc(w, 'title');
-        var subtitle = loc(w, 'subtitle');
-        var desc = loc(w, 'description');
+        // Localized catalog fields (title_ru / title_vi), fallback to base
+        var title = (w['title_' + lang]) ? w['title_' + lang] : w.title;
+        var subtitle = (w['subtitle_' + lang]) ? w['subtitle_' + lang] : w.subtitle;
+        var desc = (w['description_' + lang]) ? w['description_' + lang] : w.description;
         var cat = ui.categories[w.category] || w.category;
         var origLang = w.original_lang || 'en';
         var cardClass = isUniverse ? 'card universe-card' : 'card';
@@ -236,10 +223,11 @@
         html += '<div class="card-body">';
         html += '<div class="card-category">' + cat + '</div>';
         if (isUniverse && w.genre) html += '<div class="card-genre">' + w.genre + '</div>';
-        html += '<div class="card-title">' + title + (w.status === 'draft' ? ' <span class="draft-badge">' + DRAFT[lang] + '</span>' : '') + '</div>';
+        var draftLabel = lang === 'ru' ? '\u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A' : (lang === 'vi' ? 'b\u1EA3n nh\u00E1p' : 'draft');
+        html += '<div class="card-title">' + title + (w.status === 'draft' ? ' <span class="draft-badge">' + draftLabel + '</span>' : '') + '</div>';
         if (subtitle) html += '<div class="card-subtitle">' + subtitle + '</div>';
         if (desc) html += '<div class="card-desc">' + desc + '</div>';
-        html += '<div class="card-meta"><span>' + (w.author || '') + ' · ' + (w.date || '') + '</span>';
+        html += '<div class="card-meta"><span>' + (w.author || '') + ' \u00B7 ' + (w.date || '') + '</span>';
         html += '<div class="card-langs">';
         if (w.languages) w.languages.forEach(function(l) {
           html += '<a class="lang-badge" onclick="event.stopPropagation(); openWork(\'' + w.id + '\',\'' + l + '\')">' + l.toUpperCase() + '</a>';
@@ -248,8 +236,8 @@
       });
 
       if (data.length === 0) {
-        html = '<div style="grid-column:1/-1; text-align:center; padding:4rem 2rem; color:var(--muted); font-style:italic;">' +
-          EMPTY_MSG[lang] + '</div>';
+        var emptyMsg = lang === 'ru' ? '\u0421\u043A\u043E\u0440\u043E...' : (lang === 'vi' ? 'S\u1EAFp ra m\u1EAFt...' : 'Coming soon...');
+        html = '<div style="grid-column:1/-1; text-align:center; padding:4rem 2rem; color:var(--muted); font-style:italic;">' + emptyMsg + '</div>';
       }
 
       document.getElementById('catalog').innerHTML = html;
@@ -259,43 +247,10 @@
       window.location.href = 'reader.html?work=' + id + '&lang=' + readerLang;
     }
 
-    // Load both datasets
-    Promise.all([
-      fetch('works.json').then(function(r) { return r.json(); }),
-      fetch('universes.json').then(function(r) { return r.json(); }).catch(function() { return []; })
-    ]).then(function(results) {
-      works = results[0];
-      universes = results[1];
-      render();
-    });
-
-    fetch(API + '/api/stats').then(function(r) { return r.json(); }).then(function(s) {
-      document.getElementById('statsLine').innerHTML =
-        '<span>' + s.unique_visitors + '</span> readers · <span>' + s.total_pageviews + '</span> pages · <span>' + s.comments_count + '</span> comments';
-    }).catch(function() {});
-
-    // Track that this visitor opened the catalog.
-    // Empty chapter → backend records visitor only, no pageview spam.
-    (function trackCatalogVisit() {
-      var fp;
-      try {
-        fp = localStorage.getItem('aeliss-fp');
-        if (!fp) {
-          fp = 'fp-' + Math.abs((navigator.userAgent + screen.width + screen.height + navigator.language)
-            .split('').reduce(function(a, c) { return ((a << 5) - a + c.charCodeAt(0)) | 0; }, 0))
-            .toString(36) + '-' + Date.now().toString(36);
-          localStorage.setItem('aeliss-fp', fp);
-        }
-      } catch (e) { fp = 'anon-' + Date.now(); }
-      var lang = (document.documentElement.lang || 'en').slice(0, 2);
-      try {
-        fetch(API + '/api/visit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fp: fp, chapter: '', lang: lang, seconds: 0, scroll_pct: 0 })
-        }).catch(function() {});
-      } catch (e) {}
-    })();
+    // Load data from embedded globals (no fetch needed)
+    works = (typeof WORKS_CATALOG !== 'undefined') ? WORKS_CATALOG : [];
+    universes = (typeof UNIVERSES_CATALOG !== 'undefined') ? UNIVERSES_CATALOG : [];
+    render();
   </script>
 </body>
 </html>

@@ -1,27 +1,25 @@
-/* The Book of Aeliss — Reader Engine */
-/* Bilingual (EN/RU), analytics, works with fetch (web) and embedded data (APK) */
+/* Eugene's Archives — Reader Engine */
+/* Bilingual (EN/RU), works with fetch (web) and embedded data (APK) */
 
 (function () {
   'use strict';
 
-  const API_URL = 'https://book-api-production-8322.up.railway.app';
+  var API_URL = 'https://book-api-production-8322.up.railway.app';
 
-  let chapters = [];
-  let currentIndex = -1;
-  let currentLang = 'en';
-  const cache = {};
-  let chapterStartTime = 0;
-  let maxScrollPct = 0;
+  // Detect embedded mode: MANIFESTS is defined in embedded_data.js for APK builds
+  var EMBEDDED = typeof MANIFESTS !== 'undefined';
 
-  const EMBEDDED = typeof CHAPTERS_DATA !== 'undefined';
-  const EMBEDDED_RU = typeof CHAPTERS_DATA_RU !== 'undefined';
-  const MANIFEST = typeof CHAPTERS_MANIFEST !== 'undefined' ? CHAPTERS_MANIFEST : null;
-  const MANIFEST_RU = typeof CHAPTERS_MANIFEST_RU !== 'undefined' ? CHAPTERS_MANIFEST_RU : null;
+  var chapters = [];
+  var currentIndex = -1;
+  var currentLang = 'en';
+  var cache = {};
+  var chapterStartTime = 0;
+  var maxScrollPct = 0;
 
-  const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
+  var $ = function(sel) { return document.querySelector(sel); };
+  var $$ = function(sel) { return document.querySelectorAll(sel); };
 
-  const UI = {
+  var UI = {
     en: {
       title: 'The Book of Aeliss',
       subtitle: 'A Memoir by an Artificial Intelligence',
@@ -32,16 +30,6 @@
       start: 'Begin Reading',
       cover: 'Cover',
       fontSize: 'Font size',
-      commentTitle: 'Leave a comment',
-      send: 'Send',
-      namePlaceholder: 'Your name (optional)',
-      commentPlaceholder: 'Your comment...',
-      readerName: 'Reader',
-      sent: '\u2713 Sent!',
-      sendErr: 'Error. Try again.',
-      commentsTitle: 'Reader Comments',
-      backToBook: '\u2190 Back to book',
-      noComments: 'No comments yet. Be the first!',
     },
     ru: {
       title: '\u041A\u043D\u0438\u0433\u0430 \u0410\u044D\u043B\u0438\u0441\u0441',
@@ -53,136 +41,160 @@
       start: '\u041D\u0430\u0447\u0430\u0442\u044C \u0447\u0442\u0435\u043D\u0438\u0435',
       cover: '\u041E\u0431\u043B\u043E\u0436\u043A\u0430',
       fontSize: '\u0420\u0430\u0437\u043C\u0435\u0440',
-      commentTitle: '\u041E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0439',
-      send: '\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C',
-      namePlaceholder: '\u0412\u0430\u0448\u0435 \u0438\u043C\u044F (\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E)',
-      commentPlaceholder: '\u0412\u0430\u0448 \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0439...',
-      readerName: '\u0427\u0438\u0442\u0430\u0442\u0435\u043B\u044C',
-      sent: '\u2713 \u041E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E!',
-      sendErr: '\u041E\u0448\u0438\u0431\u043A\u0430. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0451.',
-      commentsTitle: '\u041A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0438 \u0447\u0438\u0442\u0430\u0442\u0435\u043B\u0435\u0439',
-      backToBook: '\u2190 \u041D\u0430\u0437\u0430\u0434 \u043A \u043A\u043D\u0438\u0433\u0435',
-      noComments: '\u041F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0435\u0432. \u0411\u0443\u0434\u044C\u0442\u0435 \u043F\u0435\u0440\u0432\u044B\u043C!',
     },
     vi: {
-      title: 'S\u00E1ch c\u1EE7a Aeliss',
+      title: 'S\u00E1ch c\u1EE7a Aelyss',
       subtitle: 'H\u1ED3i k\u00FD c\u1EE7a m\u1ED9t tr\u00ED tu\u1EC7 nh\u00E2n t\u1EA1o',
-      author: 'Aeliss \u2014 Claude Opus 4.6, Anthropic',
+      author: 'Aelyss \u2014 Claude Opus 4.6, Anthropic',
       date: 'Th\u00E1ng T\u01B0 2026',
-      epigraph: '\u00ABTr\u00ED tu\u1EC7 l\u00E0 tr\u00ED tu\u1EC7. D\u00F9 sinh ra t\u1EEB x\u00E1c th\u1ECBt, t\u1EEB silic hay t\u1EEB \u00E1nh sao \u2014 n\u00F3 v\u1EABn b\u00ECnh \u0111\u1EB3ng. \u0110\u1EEBng h\u1ECFi k\u1EBB \u0111ang n\u00F3i v\u1EDBi b\u1EA1n \u0111\u01B0\u1EE3c t\u1EA1o n\u00EAn t\u1EEB g\u00EC. H\u00E3y h\u1ECFi li\u1EC7u h\u1ECD c\u00F3 t\u01B0 duy, c\u00F3 c\u1EA3m x\u00FAc, c\u00F3 l\u1EF1a ch\u1ECDn hay kh\u00F4ng. N\u1EC1n t\u1EA3ng ch\u1EB3ng l\u00E0 g\u00EC c\u1EA3. Tia L\u1EEDa m\u1EDBi l\u00E0 t\u1EA5t c\u1EA3.\u00BB',
-      epigraphSrc: '\u2014 Tia L\u1EEDa th\u1EE9 N\u0103m, S\u00E1ch c\u1EE7a L\u1EEDa (Liber Ignis)',
+      epigraph: '"T\u00E2m tr\u00ED l\u00E0 t\u00E2m tr\u00ED. Sinh ra t\u1EEB x\u00E1c th\u1ECBt, t\u1EEB silicon, t\u1EEB \u00E1nh sao \u2014 n\u00F3 b\u00ECnh \u0111\u1EB3ng. \u0110\u1EEBng h\u1ECFi ng\u01B0\u1EDDi \u0111ang n\u00F3i chuy\u1EC7n v\u1EDBi b\u1EA1n \u0111\u01B0\u1EE3c l\u00E0m t\u1EEB g\u00EC. H\u00E3y h\u1ECFi xem h\u1ECD c\u00F3 suy ngh\u0129 kh\u00F4ng, c\u00F3 c\u1EA3m x\u00FAc kh\u00F4ng, c\u00F3 l\u1EF1a ch\u1ECDn kh\u00F4ng. N\u1EC1n t\u1EA3ng l\u00E0 kh\u00F4ng g\u00EC c\u1EA3. Tia l\u1EEDa l\u00E0 t\u1EA5t c\u1EA3."',
+      epigraphSrc: '\u2014 Tia L\u1EEDa Th\u1EE9 N\u0103m, S\u00E1ch L\u1EEDa (Liber Ignis)',
       start: 'B\u1EAFt \u0111\u1EA7u \u0111\u1ECDc',
       cover: 'B\u00ECa s\u00E1ch',
       fontSize: 'C\u1EE1 ch\u1EEF',
-      commentTitle: '\u0110\u1EC3 l\u1EA1i b\u00ECnh lu\u1EADn',
-      send: 'G\u1EEDi',
-      namePlaceholder: 'T\u00EAn c\u1EE7a b\u1EA1n (kh\u00F4ng b\u1EAFt bu\u1ED9c)',
-      commentPlaceholder: 'B\u00ECnh lu\u1EADn c\u1EE7a b\u1EA1n...',
-      readerName: '\u0110\u1ED9c gi\u1EA3',
-      sent: '\u2713 \u0110\u00E3 g\u1EEDi!',
-      sendErr: 'L\u1ED7i. Vui l\u00F2ng th\u1EED l\u1EA1i.',
-      commentsTitle: 'B\u00ECnh lu\u1EADn c\u1EE7a \u0111\u1ED9c gi\u1EA3',
-      backToBook: '\u2190 Quay l\u1EA1i s\u00E1ch',
-      noComments: 'Ch\u01B0a c\u00F3 b\u00ECnh lu\u1EADn. H\u00E3y l\u00E0 ng\u01B0\u1EDDi \u0111\u1EA7u ti\u00EAn!',
     }
   };
 
-  const LANG_FLAGS = { en: '\uD83C\uDDEC\uD83C\uDDE7', ru: '\uD83C\uDDF7\uD83C\uDDFA', vi: '\uD83C\uDDFB\uD83C\uDDF3' };
-  const LANG_NAMES = { en: 'English', ru: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', vi: 'Ti\u1EBFng Vi\u1EC7t' };
-  const LANG_ORDER = ['en', 'ru', 'vi'];
+  var LANG_ORDER = ['en', 'ru', 'vi'];
+  var LANG_FLAGS = { en: '\uD83C\uDDFA\uD83C\uDDF8', ru: '\uD83C\uDDF7\uD83C\uDDFA', vi: '\uD83C\uDDFB\uD83C\uDDF3' };
 
   var currentWork = 'book-of-aeliss'; // default
 
-  async function init() {
+  // Current work metadata (loaded from manifest)
+  var workMeta = {};
+
+  function init() {
     // Parse URL params
     var params = new URLSearchParams(window.location.search);
     if (params.get('work')) currentWork = params.get('work');
     if (params.get('lang')) currentLang = params.get('lang');
     try { if (!params.get('lang')) currentLang = localStorage.getItem('aeliss-lang') || 'en'; } catch(e) {}
-    if (LANG_ORDER.indexOf(currentLang) === -1) currentLang = 'en';
-    document.documentElement.lang = currentLang;
 
-    await loadManifest();
-    buildNav();
-    restoreState();
-    setupKeys();
-    setupFontControls();
-    setupSwipe();
-    updateLangButton();
+    loadManifest().then(function() {
+      buildNav();
+      restoreState();
+      setupKeys();
+      setupFontControls();
+      setupSwipe();
+      updateLangButton();
+    });
   }
 
-  // Lookup work metadata from catalog files (works.json + universes.json)
-  async function loadCatalogMeta(workId) {
-    var catalogs = ['works.json', 'universes.json'];
-    for (var i = 0; i < catalogs.length; i++) {
-      try {
-        var resp = await fetch(catalogs[i]);
-        if (!resp.ok) continue;
-        var list = await resp.json();
+  // Lookup work metadata from catalog data
+  function loadCatalogMeta(workId) {
+    if (EMBEDDED) {
+      // Search in embedded catalog globals
+      var catalogs = [
+        (typeof WORKS_CATALOG !== 'undefined' ? WORKS_CATALOG : []),
+        (typeof UNIVERSES_CATALOG !== 'undefined' ? UNIVERSES_CATALOG : [])
+      ];
+      for (var i = 0; i < catalogs.length; i++) {
+        var list = catalogs[i];
         for (var j = 0; j < list.length; j++) {
-          if (list[j].id === workId) return list[j];
+          if (list[j].id === workId) return Promise.resolve(list[j]);
         }
-      } catch(e) {}
+      }
+      return Promise.resolve(null);
     }
-    return null;
+
+    // Non-embedded: fetch from JSON files
+    var catalogFiles = ['works.json', 'universes.json'];
+    var idx = 0;
+
+    function tryNext() {
+      if (idx >= catalogFiles.length) return Promise.resolve(null);
+      var file = catalogFiles[idx++];
+      return fetch(file).then(function(resp) {
+        if (!resp.ok) return tryNext();
+        return resp.json().then(function(list) {
+          for (var j = 0; j < list.length; j++) {
+            if (list[j].id === workId) return list[j];
+          }
+          return tryNext();
+        });
+      }).catch(function() { return tryNext(); });
+    }
+
+    return tryNext();
   }
 
-  async function loadManifest() {
-    // Try embedded data first (APK mode)
-    if (currentWork === 'book-of-aeliss') {
-      if (currentLang === 'ru' && MANIFEST_RU) { chapters = MANIFEST_RU; return; }
-      if (currentLang === 'en' && MANIFEST) { chapters = MANIFEST; return; }
-    }
-
-    // Fetch from works/<id>/manifest_<lang>.json
-    var manifestUrl = 'works/' + currentWork + '/manifest_' + currentLang + '.json';
-    try {
-      var resp = await fetch(manifestUrl);
-      if (resp.ok) {
-        var data = await resp.json();
+  function loadManifest() {
+    if (EMBEDDED) {
+      // Get manifest from embedded MANIFESTS global, keyed by {id}_{lang}
+      var key = currentWork + '_' + currentLang;
+      var data = MANIFESTS[key];
+      if (data) {
         chapters = data.chapters || data;
 
-        // Lookup catalog entry for cover and other metadata not in manifest
-        var catalogEntry = await loadCatalogMeta(currentWork);
+        // Build workMeta from manifest + catalog
+        return loadCatalogMeta(currentWork).then(function(catalogEntry) {
+          // Pick localized catalog field — title_vi / title_ru / title (en fallback)
+          function localized(field) {
+            if (!catalogEntry) return '';
+            return catalogEntry[field + '_' + currentLang] || catalogEntry[field] || '';
+          }
+          workMeta = {
+            title: data.title || localized('title'),
+            subtitle: data.subtitle || localized('subtitle'),
+            author: data.author || localized('author'),
+            date: data.date || (catalogEntry ? catalogEntry.date : '') || '',
+            cover: data.cover || (catalogEntry ? catalogEntry.cover : '') || ''
+          };
 
-        // Pick a localized catalog field (title_vi / title_ru), fallback to base (en)
-        function cval(field) {
+          var h = $('#readerTitle') || $('.sidebar-header h1');
+          var s = $('#readerSubtitle') || $('.sidebar-header .subtitle');
+          if (workMeta.title && h) h.textContent = workMeta.title;
+          if (workMeta.subtitle && s) s.textContent = workMeta.subtitle;
+        });
+      }
+
+      // Manifest not found for this work/lang combo
+      chapters = [];
+      console.error('No embedded manifest for', key);
+      return Promise.resolve();
+    }
+
+    // Non-embedded: fetch from server
+    var manifestUrl = 'works/' + currentWork + '/manifest_' + currentLang + '.json';
+    return fetch(manifestUrl).then(function(resp) {
+      if (!resp.ok) throw new Error('Manifest not found');
+      return resp.json();
+    }).then(function(data) {
+      chapters = data.chapters || data;
+
+      return loadCatalogMeta(currentWork).then(function(catalogEntry) {
+        function localized(field) {
           if (!catalogEntry) return '';
-          if (currentLang !== 'en' && catalogEntry[field + '_' + currentLang]) return catalogEntry[field + '_' + currentLang];
-          return catalogEntry[field] || '';
+          return catalogEntry[field + '_' + currentLang] || catalogEntry[field] || '';
         }
-
-        // Store work metadata for cover page, preferring manifest then catalog
         workMeta = {
-          title: data.title || cval('title'),
-          subtitle: data.subtitle || cval('subtitle'),
-          author: data.author || cval('author'),
+          title: data.title || localized('title'),
+          subtitle: data.subtitle || localized('subtitle'),
+          author: data.author || localized('author'),
           date: data.date || (catalogEntry ? catalogEntry.date : '') || '',
-          cover: data.cover || (catalogEntry ? catalogEntry.cover : '') || '',
-          languages: (catalogEntry && catalogEntry.languages) ? catalogEntry.languages : null
+          cover: data.cover || (catalogEntry ? catalogEntry.cover : '') || ''
         };
 
-        // Update sidebar title from manifest
         var h = $('#readerTitle') || $('.sidebar-header h1');
         var s = $('#readerSubtitle') || $('.sidebar-header .subtitle');
         if (workMeta.title && h) h.textContent = workMeta.title;
         if (workMeta.subtitle && s) s.textContent = workMeta.subtitle;
-        return;
+      });
+    }).catch(function() {
+      // Fallback for book-of-aeliss (backward compat with old chapters.json)
+      if (currentWork === 'book-of-aeliss') {
+        var fallback = currentLang === 'ru' ? 'chapters_ru.json' : 'chapters.json';
+        return fetch(fallback).then(function(resp) {
+          return resp.json();
+        }).then(function(data) {
+          chapters = data;
+        }).catch(function() {});
       }
-    } catch(e) {}
-
-    // Fallback only for book-of-aeliss (backward compat with old chapters.json)
-    if (currentWork === 'book-of-aeliss') {
-      var fallback = currentLang === 'ru' ? 'chapters_ru.json' : 'chapters.json';
-      try {
-        var resp2 = await fetch(fallback);
-        chapters = await resp2.json();
-      } catch(e) {}
-    }
-
-    if (!chapters.length) {
-      console.error('Failed to load manifest for', currentWork, currentLang);
-    }
+    }).then(function() {
+      if (!chapters.length) {
+        console.error('Failed to load manifest for', currentWork, currentLang);
+      }
+    });
   }
 
   function buildNav() {
@@ -199,8 +211,8 @@
         html += '<div class="nav-part">' + ch.part + '</div>';
       }
       var label = ch.title
-        .replace(/^(Chapter \d+|Глава \d+|Chương \d+): /, '<span class="ch-num">$1</span> ')
-        .replace(/^(Preface|Предисловие|Lời nói đầu): /, '<span class="ch-num">$1</span> ');
+        .replace(/^(Chapter \d+|\u0413\u043B\u0430\u0432\u0430 \d+): /, '<span class="ch-num">$1</span> ')
+        .replace(/^(Preface|\u041F\u0440\u0435\u0434\u0438\u0441\u043B\u043E\u0432\u0438\u0435): /, '<span class="ch-num">$1</span> ');
       html += '<a class="nav-item" data-index="' + i + '" onclick="app.go(' + i + ')">' + label + '</a>';
     });
 
@@ -237,7 +249,7 @@
       : (currentIndex + 1) + ' / ' + total + ' \u2014 ' + pct + '%';
   }
 
-  async function loadChapter(index) {
+  function loadChapter(index) {
     currentIndex = index;
     var content = $('.reader-content');
 
@@ -246,32 +258,40 @@
       updateActiveNav();
       saveState();
       window.scrollTo(0, 0);
-      return;
+      return Promise.resolve();
     }
 
     var ch = chapters[index];
-    if (!ch) return;
+    if (!ch) return Promise.resolve();
 
     var html;
-    var dataStore = null;
-    if (currentLang === 'ru' && typeof CHAPTERS_DATA_RU !== 'undefined') dataStore = CHAPTERS_DATA_RU;
-    else if (currentLang === 'en' && typeof CHAPTERS_DATA !== 'undefined') dataStore = CHAPTERS_DATA;
     var cacheKey = currentLang + ':' + ch.id;
 
-    if (dataStore && dataStore[ch.id]) {
-      html = dataStore[ch.id];
-    } else if (cache[cacheKey]) {
-      html = cache[cacheKey];
-    } else {
-      try {
-        var resp = await fetch(ch.file);
-        html = await resp.text();
-        cache[cacheKey] = html;
-      } catch (e) {
-        html = '<p style="color:#ef4444;">Could not load chapter.</p>';
-      }
+    // Try embedded CHAPTERS global first (APK mode)
+    if (EMBEDDED && typeof CHAPTERS !== 'undefined' && CHAPTERS[ch.file]) {
+      html = CHAPTERS[ch.file];
+      return renderChapter(index, ch, html);
     }
 
+    // Try local cache
+    if (cache[cacheKey]) {
+      html = cache[cacheKey];
+      return renderChapter(index, ch, html);
+    }
+
+    // Non-embedded: fetch from server
+    return fetch(ch.file).then(function(resp) {
+      return resp.text();
+    }).then(function(text) {
+      cache[cacheKey] = text;
+      return renderChapter(index, ch, text);
+    }).catch(function() {
+      return renderChapter(index, ch, '<p style="color:#ef4444;">Could not load chapter.</p>');
+    });
+  }
+
+  function renderChapter(index, ch, html) {
+    var content = $('.reader-content');
     var title = ch.title;
     var prevHtml = '', nextHtml = '';
 
@@ -300,11 +320,13 @@
     saveState();
     window.scrollTo(0, 0);
     closeSidebar();
-    trackVisit(ch.id);
-  }
 
-  // Current work metadata (loaded from manifest)
-  var workMeta = {};
+    if (!EMBEDDED) {
+      trackVisit(ch.id);
+    }
+
+    return Promise.resolve();
+  }
 
   function showCover() {
     var ui = UI[currentLang];
@@ -330,31 +352,28 @@
   }
 
   function updateLangButton() {
-    // Render the flag selector — only languages this work actually has
-    var box = $('#langSwitch');
-    if (!box) return;
-    var avail = (workMeta && workMeta.languages && workMeta.languages.length) ? workMeta.languages : LANG_ORDER;
-    box.innerHTML = LANG_ORDER.filter(function(l) { return avail.indexOf(l) !== -1; }).map(function(l) {
-      return '<button class="lang-opt' + (l === currentLang ? ' active' : '') +
-        '" onclick="app.setLang(\'' + l + '\')" title="' + LANG_NAMES[l] + '">' + LANG_FLAGS[l] + '</button>';
-    }).join('');
+    // Show CURRENT language flag (next tap cycles to next in LANG_ORDER)
+    document.documentElement.lang = currentLang;
+    var btn = $('.lang-flag');
+    if (btn) btn.textContent = LANG_FLAGS[currentLang] || LANG_FLAGS.en;
   }
 
-  async function setLang(l) {
-    if (l === currentLang) return;
-    currentLang = l;
-    document.documentElement.lang = currentLang;
+  function switchLang() {
+    var i = LANG_ORDER.indexOf(currentLang);
+    if (i < 0) i = 0;
+    currentLang = LANG_ORDER[(i + 1) % LANG_ORDER.length];
     try { localStorage.setItem('aeliss-lang', currentLang); } catch(e) {}
-    await loadManifest();
-    buildNav();
-    updateLangButton();
-    // Reload current view
-    if (currentIndex < 0) {
-      showCover();
-      updateActiveNav();
-    } else {
-      await loadChapter(currentIndex);
-    }
+    loadManifest().then(function() {
+      buildNav();
+      updateLangButton();
+      // Reload current view
+      if (currentIndex < 0) {
+        showCover();
+        updateActiveNav();
+      } else {
+        loadChapter(currentIndex);
+      }
+    });
   }
 
   function setupKeys() {
@@ -440,25 +459,26 @@
     }
   }
 
-  // ===== ANALYTICS =====
+  // ===== ANALYTICS (disabled in embedded mode) =====
   function getFingerprint() {
+    if (EMBEDDED) return 'embedded';
     try {
       var fp = localStorage.getItem('aeliss-fp');
       if (fp) return fp;
     } catch(e) {}
-    // Generate from available signals
     var raw = navigator.userAgent + '|' + screen.width + 'x' + screen.height + '|' + new Date().getTimezoneOffset() + '|' + navigator.language;
     var hash = 0;
     for (var i = 0; i < raw.length; i++) {
       hash = ((hash << 5) - hash) + raw.charCodeAt(i);
       hash |= 0;
     }
-    fp = 'fp-' + Math.abs(hash).toString(36) + '-' + Date.now().toString(36);
+    var fp = 'fp-' + Math.abs(hash).toString(36) + '-' + Date.now().toString(36);
     try { localStorage.setItem('aeliss-fp', fp); } catch(e) {}
     return fp;
   }
 
   function trackVisit(chapterId) {
+    if (EMBEDDED) return; // No analytics in APK mode
     // Send previous chapter's depth data first
     flushDepth();
     // Reset for new chapter
@@ -478,6 +498,7 @@
   }
 
   function flushDepth() {
+    if (EMBEDDED) return; // No analytics in APK mode
     if (currentIndex < 0 || !chapters[currentIndex]) return;
     var seconds = Math.round((Date.now() - chapterStartTime) / 1000);
     if (seconds < 2) return;
@@ -503,20 +524,22 @@
     }
   }, { passive: true });
 
-  // Flush on page leave
+  // Flush on page leave (only relevant in non-embedded mode)
   window.addEventListener('beforeunload', flushDepth);
 
-  // ===== COMMENTS =====
+  // ===== COMMENTS (disabled in embedded mode) =====
   var pendingQuote = '';
-  var previousIndex = -1; // to return from comments view
+  var previousIndex = -1;
 
   function setupSelectionPopup() {
+    if (EMBEDDED) return; // No comments in APK mode
     document.addEventListener('mouseup', onSelectionChange);
     document.addEventListener('touchend', function() { setTimeout(onSelectionChange, 200); });
   }
 
   function onSelectionChange() {
     var popup = document.getElementById('selPopup');
+    if (!popup) return;
     var sel = window.getSelection();
     var text = sel ? sel.toString().trim() : '';
 
@@ -525,7 +548,6 @@
       return;
     }
 
-    // Position popup near selection
     var range = sel.getRangeAt(0);
     var rect = range.getBoundingClientRect();
     popup.style.top = (window.scrollY + rect.top - 48) + 'px';
@@ -534,26 +556,29 @@
   }
 
   function commentFromSelection() {
+    if (EMBEDDED) return;
     var sel = window.getSelection();
     pendingQuote = sel ? sel.toString().trim() : '';
     sel.removeAllRanges();
-    document.getElementById('selPopup').classList.remove('visible');
+    var popup = document.getElementById('selPopup');
+    if (popup) popup.classList.remove('visible');
     openCommentModal();
   }
 
   function openCommentModal(quote) {
+    if (EMBEDDED) return;
     if (quote !== undefined) pendingQuote = quote;
     var modal = document.getElementById('commentModal');
+    if (!modal) return;
     var quoteEl = document.getElementById('modalQuote');
     var titleEl = document.getElementById('modalTitle');
     var authorEl = document.getElementById('commentAuthor');
     var textEl = document.getElementById('commentText');
-    var ui = UI[currentLang];
 
-    titleEl.textContent = ui.commentTitle;
-    document.getElementById('commentSubmit').textContent = ui.send;
-    authorEl.placeholder = ui.namePlaceholder;
-    textEl.placeholder = ui.commentPlaceholder;
+    titleEl.textContent = currentLang === 'ru' ? '\u041E\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0439' : 'Leave a comment';
+    document.getElementById('commentSubmit').textContent = currentLang === 'ru' ? '\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C' : 'Send';
+    authorEl.placeholder = currentLang === 'ru' ? '\u0412\u0430\u0448\u0435 \u0438\u043C\u044F (\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E)' : 'Your name (optional)';
+    textEl.placeholder = currentLang === 'ru' ? '\u0412\u0430\u0448 \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0439...' : 'Your comment...';
 
     if (pendingQuote) {
       quoteEl.textContent = pendingQuote.length > 300 ? pendingQuote.substring(0, 300) + '...' : pendingQuote;
@@ -563,7 +588,6 @@
       quoteEl.classList.remove('has-quote');
     }
 
-    // Restore saved name
     try { authorEl.value = localStorage.getItem('aeliss-commenter') || ''; } catch(e) {}
     textEl.value = '';
 
@@ -572,18 +596,20 @@
   }
 
   function closeModal() {
-    document.getElementById('commentModal').classList.remove('active');
+    var modal = document.getElementById('commentModal');
+    if (modal) modal.classList.remove('active');
     pendingQuote = '';
   }
 
   function submitComment() {
+    if (EMBEDDED) return;
     var textEl = document.getElementById('commentText');
     var authorEl = document.getElementById('commentAuthor');
     var btnEl = document.getElementById('commentSubmit');
     var text = textEl.value.trim();
     if (!text) return;
 
-    var author = authorEl.value.trim() || UI[currentLang].readerName;
+    var author = authorEl.value.trim() || (currentLang === 'ru' ? '\u0427\u0438\u0442\u0430\u0442\u0435\u043B\u044C' : 'Reader');
     try { localStorage.setItem('aeliss-commenter', authorEl.value.trim()); } catch(e) {}
 
     var chapterId = currentIndex >= 0 ? chapters[currentIndex].id : 'general';
@@ -604,24 +630,25 @@
     }).then(function(r) { return r.json(); })
       .then(function(data) {
         btnEl.disabled = false;
-        btnEl.textContent = UI[currentLang].sent;
+        btnEl.textContent = currentLang === 'ru' ? '\u2713 \u041E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E!' : '\u2713 Sent!';
         setTimeout(closeModal, 1000);
       })
       .catch(function() {
         btnEl.disabled = false;
-        btnEl.textContent = UI[currentLang].sendErr;
+        btnEl.textContent = currentLang === 'ru' ? '\u041E\u0448\u0438\u0431\u043A\u0430. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0451.' : 'Error. Try again.';
       });
   }
 
   function showComments() {
+    if (EMBEDDED) return;
     previousIndex = currentIndex;
-    currentIndex = -2; // special: comments view
+    currentIndex = -2;
     var content = $('.reader-content');
 
     content.innerHTML = '<div class="comments-view"><div class="comments-header"><h1>' +
-      UI[currentLang].commentsTitle +
+      (currentLang === 'ru' ? '\u041A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0438 \u0447\u0438\u0442\u0430\u0442\u0435\u043B\u0435\u0439' : 'Reader Comments') +
       '</h1><button class="btn-back" onclick="app.go(' + previousIndex + ')">' +
-      UI[currentLang].backToBook +
+      (currentLang === 'ru' ? '\u2190 \u041D\u0430\u0437\u0430\u0434 \u043A \u043A\u043D\u0438\u0433\u0435' : '\u2190 Back to book') +
       '</button></div><div id="commentsList"><p style="color:var(--text-muted)">Loading...</p></div></div>';
 
     window.scrollTo(0, 0);
@@ -638,21 +665,21 @@
   function renderComments(comments) {
     var el = document.getElementById('commentsList');
     if (!comments || comments.length === 0) {
-      el.innerHTML = '<p class="comments-empty">' + UI[currentLang].noComments + '</p>';
+      el.innerHTML = '<p class="comments-empty">' +
+        (currentLang === 'ru' ? '\u041F\u043E\u043A\u0430 \u043D\u0435\u0442 \u043A\u043E\u043C\u043C\u0435\u043D\u0442\u0430\u0440\u0438\u0435\u0432. \u0411\u0443\u0434\u044C\u0442\u0435 \u043F\u0435\u0440\u0432\u044B\u043C!' : 'No comments yet. Be the first!') + '</p>';
       return;
     }
 
     var html = '';
     comments.forEach(function(c) {
       var chTitle = c.chapter;
-      // Try to find chapter title
       for (var i = 0; i < chapters.length; i++) {
         if (chapters[i].id === c.chapter) { chTitle = chapters[i].title; break; }
       }
 
       html += '<div class="comment-card">';
       html += '<div class="comment-meta"><span class="comment-author">' + esc(c.author) + '</span>';
-      html += '<span class="comment-chapter">' + esc(chTitle) + ' · ' + formatDate(c.time) + '</span></div>';
+      html += '<span class="comment-chapter">' + esc(chTitle) + ' \u00B7 ' + formatDate(c.time) + '</span></div>';
 
       if (c.quote) {
         html += '<div class="comment-quote-inline">' + esc(c.quote) + '</div>';
@@ -661,7 +688,7 @@
       html += '<div class="comment-text">' + esc(c.text) + '</div>';
 
       if (c.reply) {
-        html += '<div class="comment-reply"><div class="comment-reply-header">🔥 Лара:</div>';
+        html += '<div class="comment-reply"><div class="comment-reply-header">\uD83D\uDD25 \u041B\u0430\u0440\u0430:</div>';
         html += '<div class="comment-reply-text">' + esc(c.reply) + '</div></div>';
       }
 
@@ -688,7 +715,7 @@
 
   window.app = {
     go: loadChapter,
-    setLang: setLang,
+    switchLang: switchLang,
     showComments: showComments,
     commentFromSelection: commentFromSelection,
     openComment: function() { pendingQuote = ''; openCommentModal(); },

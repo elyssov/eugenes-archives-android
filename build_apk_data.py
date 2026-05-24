@@ -78,7 +78,7 @@ def find_manifests(works_dir, work_id):
     manifests = {}
     if not os.path.isdir(work_path):
         return manifests
-    for lang in ["ru", "en"]:
+    for lang in ["ru", "en", "vi"]:
         manifest_file = os.path.join(work_path, f"manifest_{lang}.json")
         if os.path.exists(manifest_file):
             manifests[lang] = manifest_file
@@ -199,24 +199,16 @@ def main():
 
     output_size = os.path.getsize(OUTPUT_JS)
 
-    # Copy all static site files (HTML, CSS, JS) — these define the UI
-    # that the WebView renders. Forgetting any one of them leaves the APK
-    # running an outdated version of the site (e.g. missing language
-    # switcher, missing VI font rules, broken layout).
-    print("\nCopying static site files...")
-    # help.html lives only in the Android assets (no web equivalent) — don't copy it.
-    static_files = ["style.css", "index.html", "reader.html", "app.js"]
-    copied_static = []
-    for name in static_files:
-        src = os.path.join(SOURCE_DIR, name)
-        dst = os.path.join(OUTPUT_DIR, name)
-        if os.path.exists(src):
-            shutil.copy2(src, dst)
-            size = os.path.getsize(dst)
-            print(f"  Copied {name} ({size:,} bytes)")
-            copied_static.append(name)
-        else:
-            print(f"  WARNING: {name} not found at {src}")
+    # Copy style.css
+    print("\nCopying style.css...")
+    src_css = os.path.join(SOURCE_DIR, "style.css")
+    dst_css = os.path.join(OUTPUT_DIR, "style.css")
+    if os.path.exists(src_css):
+        shutil.copy2(src_css, dst_css)
+        css_size = os.path.getsize(dst_css)
+        print(f"  Copied style.css ({css_size:,} bytes)")
+    else:
+        print("  WARNING: style.css not found!")
 
     # Summary
     print("\n" + "=" * 60)
@@ -229,7 +221,7 @@ def main():
     print(f"  Chapters embedded:         {chapter_count}")
     print(f"  Output file:               {OUTPUT_JS}")
     print(f"  Output size:               {output_size:,} bytes ({output_size / 1024 / 1024:.2f} MB)")
-    print(f"  Static files copied:       {', '.join(copied_static)}")
+    print(f"  Style CSS copied:          {dst_css}")
     print("=" * 60)
     print("Done!")
 
