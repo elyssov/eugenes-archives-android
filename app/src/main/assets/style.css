@@ -40,6 +40,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Vietnamese: Georgia lacks precomposed glyphs for circumflex+tone (ấ ề ố …),
+   which fall back to broken decomposed rendering. Use a fully-covering serif. */
+html[lang="vi"] body {
+  font-family: 'Times New Roman', 'Noto Serif', serif;
+}
+
 /* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -503,29 +509,36 @@ body {
   color: var(--accent);
 }
 
-.lang-btn {
-  width: 44px;
-  height: 44px;
-  background: var(--bg-card);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  cursor: pointer;
+/* Language selector — three-flag picker */
+.lang-switch {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 0.2rem;
   margin-left: 8px;
-  transition: all var(--transition);
-  padding: 0;
 }
 
-.lang-btn:hover {
-  background: var(--accent-glow);
+.lang-opt {
+  background: var(--bg-card);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0.2rem 0.3rem;
+  filter: grayscale(0.8);
+  opacity: 0.55;
+  transition: all var(--transition);
+}
+
+.lang-opt:hover {
+  filter: grayscale(0);
+  opacity: 1;
   transform: scale(1.1);
 }
 
-.lang-flag {
-  font-size: 1.4rem;
-  line-height: 1;
+.lang-opt.active {
+  filter: grayscale(0);
+  opacity: 1;
+  border-color: var(--accent);
 }
 
 .font-label {
