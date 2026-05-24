@@ -2,6 +2,7 @@ package com.elyssov.archives
 
 import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
@@ -30,6 +31,10 @@ import android.widget.TextView
  * a global audience.
  */
 object TipDialog {
+
+    // Shared with BillingManager so we don't multiply preference files.
+    private const val PREFS = "tip_jar"
+    private const val KEY_LANG = "dialog_lang"
 
     private data class Strings(
         val title: String,
@@ -77,8 +82,12 @@ object TipDialog {
 
         fun dp(value: Int): Int = (value * density).toInt()
 
-        // Default language — always English.
-        var currentLang = "en"
+        // Default language: English on a truly first launch; otherwise
+        // whatever the user last picked in the flag row. Persisted across
+        // launches and survives reinstall (within the same Android profile).
+        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        var currentLang = prefs.getString(KEY_LANG, "en") ?: "en"
+        if (currentLang !in L10N) currentLang = "en"
 
         // ─── card (the rounded container) ───────────────────────────────
         val card = LinearLayout(ctx).apply {
@@ -221,10 +230,11 @@ object TipDialog {
         }
         applyLang()
 
-        // Hook flag clicks
+        // Hook flag clicks — persist immediately so next launch defaults here.
         for ((lang, btn) in langButtons) {
             btn.setOnClickListener {
                 currentLang = lang
+                prefs.edit().putString(KEY_LANG, lang).apply()
                 applyLang()
             }
         }
