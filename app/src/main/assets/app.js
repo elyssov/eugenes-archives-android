@@ -339,7 +339,9 @@
     var date = workMeta.date || ui.date;
     var cover = workMeta.cover || '';
 
-    var coverImg = cover ? '<img src="' + cover + '" style="max-width:500px; max-height:500px; width:80%; border-radius:8px; margin-bottom:1.5rem; opacity:0.9;" alt="">' : '';
+    var coverImg = cover
+      ? '<img src="' + cover + '" style="max-width:92vw; max-height:70vh; width:auto; border-radius:8px; margin-bottom:1.5rem; opacity:0.95; cursor:zoom-in;" alt="" onclick="app.openLightbox(this.src)">'
+      : '';
 
     content.innerHTML =
       '<div class="cover">' +
@@ -350,6 +352,118 @@
       '<button class="btn-start" onclick="app.go(0)">' + ui.start + '</button>' +
       '</div>';
   }
+
+  // ===== LIGHTBOX (pinch-zoom + pan + system back) =====
+  var lbState = null;
+
+  function openLightbox(src) {
+    if (lbState) return; // already open
+
+    var lb = document.createElement('div');
+    lb.className = 'lightbox-overlay active';
+    lb.innerHTML =
+      '<button class="lightbox-close" aria-label="Close">✕</button>' +
+      '<img src="' + src + '" alt="">';
+    document.body.appendChild(lb);
+
+    var img = lb.querySelector('img');
+    var btnClose = lb.querySelector('.lightbox-close');
+
+    var scale = 1, posX = 0, posY = 0;
+    var startScale = 1, startDist = 0;
+    var startX = 0, startY = 0, startPosX = 0, startPosY = 0;
+    var lastTap = 0;
+    var dragging = false;
+
+    function apply() {
+      img.style.transform = 'translate(' + posX + 'px,' + posY + 'px) scale(' + scale + ')';
+    }
+    function dist(touches) {
+      var dx = touches[0].clientX - touches[1].clientX;
+      var dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function onTouchStart(e) {
+      if (e.touches.length === 2) {
+        startScale = scale;
+        startDist = dist(e.touches);
+        dragging = false;
+      } else if (e.touches.length === 1) {
+        var t = e.touches[0];
+        startX = t.clientX; startY = t.clientY;
+        startPosX = posX; startPosY = posY;
+        dragging = scale > 1; // only pan when zoomed in
+        // double-tap detection
+        var now = Date.now();
+        if (now - lastTap < 300) {
+          scale = scale > 1 ? 1 : 2.5;
+          posX = 0; posY = 0;
+          apply();
+          dragging = false;
+        }
+        lastTap = now;
+      }
+    }
+    function onTouchMove(e) {
+      e.preventDefault();
+      if (e.touches.length === 2) {
+        var d = dist(e.touches);
+        scale = Math.max(1, Math.min(6, startScale * (d / startDist)));
+        if (scale === 1) { posX = 0; posY = 0; }
+        apply();
+      } else if (e.touches.length === 1 && dragging) {
+        posX = startPosX + (e.touches[0].clientX - startX);
+        posY = startPosY + (e.touches[0].clientY - startY);
+        apply();
+      }
+    }
+    function onTouchEnd(e) {
+      if (e.touches.length === 0) dragging = false;
+    }
+    function onWheel(e) {
+      // desktop fallback
+      e.preventDefault();
+      var delta = -Math.sign(e.deltaY) * 0.15;
+      scale = Math.max(1, Math.min(6, scale + delta));
+      if (scale === 1) { posX = 0; posY = 0; }
+      apply();
+    }
+
+    lb.addEventListener('touchstart', onTouchStart, { passive: true });
+    lb.addEventListener('touchmove', onTouchMove, { passive: false });
+    lb.addEventListener('touchend', onTouchEnd, { passive: true });
+    lb.addEventListener('wheel', onWheel, { passive: false });
+
+    // Click outside the image (on the dark background) closes
+    lb.addEventListener('click', function(e) {
+      if (e.target === lb) closeLightbox();
+    });
+    btnClose.addEventListener('click', closeLightbox);
+
+    // Push a history entry so the system back button closes the lightbox
+    // (Android hardware back triggers webView.goBack → popstate here).
+    try { history.pushState({ lightbox: true }, ''); } catch (e) {}
+
+    lbState = { node: lb };
+  }
+
+  function closeLightbox() {
+    if (!lbState) return;
+    lbState.node.remove();
+    lbState = null;
+    // If we pushed history state, pop it so back-button stack stays clean.
+    try {
+      if (history.state && history.state.lightbox) history.back();
+    } catch (e) {}
+  }
+
+  window.addEventListener('popstate', function() {
+    if (lbState) {
+      lbState.node.remove();
+      lbState = null;
+    }
+  });
 
   function updateLangButton() {
     // Show CURRENT language flag (next tap cycles to next in LANG_ORDER)
@@ -720,8 +834,20 @@
     commentFromSelection: commentFromSelection,
     openComment: function() { pendingQuote = ''; openCommentModal(); },
     closeModal: closeModal,
-    submitComment: submitComment
+    submitComment: submitComment,
+    openLightbox: openLightbox,
+    closeLightbox: closeLightbox
   };
+
+  // Inline chapter images: click → lightbox.
+  // Delegated handler — chapter content is replaced on every navigation.
+  document.addEventListener('click', function(e) {
+    var img = e.target;
+    if (!img || img.tagName !== 'IMG') return;
+    if (!img.closest('.chapter-body')) return;
+    if (img.closest('.lightbox-overlay')) return;
+    openLightbox(img.src);
+  });
 
   document.addEventListener('DOMContentLoaded', function() {
     init();

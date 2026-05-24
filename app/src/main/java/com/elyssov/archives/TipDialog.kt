@@ -22,26 +22,50 @@ import android.widget.TextView
 
 /**
  * Tip-jar pop-up shown at app start until the user has tipped at least once.
+ * Trilingual (EN default, switchable to RU / VI via flag row at the top).
  *
- * Layout (all built in code; no XML to keep the embedded asset bundle lean):
- *
- *   ┌─────────────────────────────────────┐
- *   │  Поддержать автора              [×] │  ← close button hidden first 3s
- *   │                                     │
- *   │  Архивы бесплатны. Если они вам    │
- *   │  нравятся — вы можете               │
- *   │  поблагодарить автора. Все средства │
- *   │  идут на продолжение исследований.  │
- *   │                                     │
- *   |  [1$] [5$] [10$] [15$] [20$]       |
- *   │                                     │
- *   │  Подробности — раздел «Помощь».    │
- *   └─────────────────────────────────────┘
- *
- * The close (×) button is disabled and invisible for the first 3 seconds
- * to make the prompt deliberate; it never blocks the underlying WebView.
+ * Default language is always English regardless of the user's last language
+ * choice in the WebView — the tip-jar lives in native UI, separate from
+ * the reader's locale preference, and English is the broadest default for
+ * a global audience.
  */
 object TipDialog {
+
+    private data class Strings(
+        val title: String,
+        val body: String,
+        val footerFull: String,
+        val footerLinkText: String,
+    )
+
+    private val L10N = mapOf(
+        "en" to Strings(
+            title = "Support the author",
+            body = "Eugene's Archives is free.\n" +
+                "If it has been useful — consider thanking the author. " +
+                "Every contribution goes directly to continued research, " +
+                "writing, and software.",
+            footerFull = "Want to support on an ongoing basis? See the Help section for PayPal and card details.",
+            footerLinkText = "Help",
+        ),
+        "ru" to Strings(
+            title = "Поддержать автора",
+            body = "Eugene's Archives — бесплатное приложение.\n" +
+                "Если оно вам пригодилось — можно поблагодарить автора. " +
+                "Все средства идут на дальнейшие исследования, " +
+                "тексты и софт.",
+            footerFull = "Поддержать на регулярной основе? PayPal и реквизиты карты — в разделе «Помощь».",
+            footerLinkText = "Помощь",
+        ),
+        "vi" to Strings(
+            title = "Hỗ trợ tác giả",
+            body = "Eugene's Archives là miễn phí.\n" +
+                "Nếu nó hữu ích — hãy cân nhắc cảm ơn tác giả. " +
+                "Mọi đóng góp đều dành cho nghiên cứu, viết lách và phần mềm.",
+            footerFull = "Muốn hỗ trợ định kỳ? Xem mục Trợ giúp để biết PayPal và thông tin thẻ.",
+            footerLinkText = "Trợ giúp",
+        ),
+    )
 
     fun show(
         activity: Activity,
@@ -52,7 +76,9 @@ object TipDialog {
         val density = ctx.resources.displayMetrics.density
 
         fun dp(value: Int): Int = (value * density).toInt()
-        fun sp(value: Float): Float = value
+
+        // Default language — always English.
+        var currentLang = "en"
 
         // ─── card (the rounded container) ───────────────────────────────
         val card = LinearLayout(ctx).apply {
@@ -65,13 +91,38 @@ object TipDialog {
             }
         }
 
+        // ─── language row: 🇺🇸 🇷🇺 🇻🇳 ─────────────────────────────────
+        val langRow = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
+        }
+        val langButtons = mutableMapOf<String, TextView>()
+        for (lang in listOf("en", "ru", "vi")) {
+            val flag = when (lang) {
+                "en" -> "🇺🇸"
+                "ru" -> "🇷🇺"
+                "vi" -> "🇻🇳"
+                else -> "?"
+            }
+            val btn = TextView(ctx).apply {
+                text = flag
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                setPadding(dp(8), dp(4), dp(8), dp(4))
+                alpha = if (lang == currentLang) 1f else 0.4f
+                isClickable = true
+            }
+            langButtons[lang] = btn
+            langRow.addView(btn)
+        }
+        card.addView(langRow)
+
         // ─── top row: title + close (×) ────────────────────────────────
         val topRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         val title = TextView(ctx).apply {
-            text = "Support the author"
+            text = L10N[currentLang]!!.title
             setTextColor(0xFF34d399.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             setTypeface(typeface, android.graphics.Typeface.BOLD)
@@ -84,7 +135,6 @@ object TipDialog {
             setTextColor(0xFF9ca3af.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
             setPadding(dp(12), 0, dp(4), 0)
-            // Hidden + non-clickable for the first 3 seconds
             visibility = View.INVISIBLE
             isClickable = false
         }
@@ -94,11 +144,7 @@ object TipDialog {
 
         // ─── body text ─────────────────────────────────────────────────
         val body = TextView(ctx).apply {
-            text =
-                "Eugene's Archives is free.\n" +
-                "If it has been useful — consider thanking the author. " +
-                "Every contribution goes directly to continued research, " +
-                "writing, and software."
+            text = L10N[currentLang]!!.body
             setTextColor(0xFFe8dcc8.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setLineSpacing(dp(2).toFloat(), 1f)
@@ -119,7 +165,7 @@ object TipDialog {
             20 to BillingManager.SKU_20,
         )
         val priceButtons = mutableListOf<Button>()
-        for ((amount, sku) in amounts) {
+        for ((amount, _) in amounts) {
             val btn = Button(ctx).apply {
                 text = "$$amount"
                 setTextColor(0xFF34d399.toInt())
@@ -146,30 +192,48 @@ object TipDialog {
 
         // ─── footer link to Help ───────────────────────────────────────
         val footer = TextView(ctx).apply {
-            val full = "Want to support on an ongoing basis? See the Help section for PayPal and card details."
-            val linkStart = full.indexOf("Help")
-            val linkEnd = linkStart + "Help".length
-            val sp = SpannableString(full)
-            sp.setSpan(object : ClickableSpan() {
-                override fun onClick(widget: View) {
-                    onHelpRequested()
-                }
-            }, linkStart, linkEnd, 0)
-            sp.setSpan(ForegroundColorSpan(0xFF34d399.toInt()), linkStart, linkEnd, 0)
-            sp.setSpan(UnderlineSpan(), linkStart, linkEnd, 0)
-            text = sp
-            movementMethod = LinkMovementMethod.getInstance()
             setTextColor(0xFF9ca3af.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
             setPadding(0, dp(16), 0, 0)
+            movementMethod = LinkMovementMethod.getInstance()
         }
         card.addView(footer)
+
+        // ─── update everything when language changes ───────────────────
+        fun applyLang() {
+            val s = L10N[currentLang]!!
+            title.text = s.title
+            body.text = s.body
+            val sp = SpannableString(s.footerFull)
+            val linkStart = s.footerFull.indexOf(s.footerLinkText)
+            if (linkStart >= 0) {
+                val linkEnd = linkStart + s.footerLinkText.length
+                sp.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) { onHelpRequested() }
+                }, linkStart, linkEnd, 0)
+                sp.setSpan(ForegroundColorSpan(0xFF34d399.toInt()), linkStart, linkEnd, 0)
+                sp.setSpan(UnderlineSpan(), linkStart, linkEnd, 0)
+            }
+            footer.text = sp
+            for ((lang, btn) in langButtons) {
+                btn.alpha = if (lang == currentLang) 1f else 0.4f
+            }
+        }
+        applyLang()
+
+        // Hook flag clicks
+        for ((lang, btn) in langButtons) {
+            btn.setOnClickListener {
+                currentLang = lang
+                applyLang()
+            }
+        }
 
         // ─── dialog wrapper ────────────────────────────────────────────
         val dialog = Dialog(activity).apply {
             requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
             setContentView(card)
-            setCancelable(false)         // unlocked manually after 3s
+            setCancelable(false)
             setCanceledOnTouchOutside(false)
             window?.apply {
                 setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -185,10 +249,6 @@ object TipDialog {
             val (_, sku) = amounts[i]
             priceButtons[i].setOnClickListener {
                 billing.launchBilling(activity, sku)
-                // Dismiss eagerly; if the flow succeeds BillingManager flips
-                // hasEverTipped so we won't show again next launch. If the
-                // user cancels Google's sheet, they'll see us next time —
-                // intentional, no different from a real tip jar.
                 dialog.dismiss()
             }
         }

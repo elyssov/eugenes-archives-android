@@ -47,21 +47,26 @@ class MainActivity : ComponentActivity() {
         setContentView(webView)
         webView.loadUrl("file:///android_asset/index.html")
 
-        // Tip jar. Billing connects asynchronously; only after the initial
-        // queryPurchases round-trip do we know whether the user has ever
-        // tipped on this Google account. If they have not, surface the
-        // prompt once per launch (after the WebView already loads, so the
-        // dialog sits over a populated background — feels less abrupt).
-        billing = BillingManager(this) {
-            if (!dialogShownThisLaunch && !billing.hasEverTipped && !isFinishing) {
-                dialogShownThisLaunch = true
-                TipDialog.show(this, billing) {
-                    // Footer link routes to the embedded Help page.
-                    webView.loadUrl("file:///android_asset/help.html")
-                }
+        // Tip jar. Billing connects asynchronously; on devices without
+        // Play Services (emulator, China ROM) `onReady` may never fire.
+        // We want the prompt to appear regardless of billing state, so
+        // it ALSO surfaces after a short delay — whichever happens
+        // first. If billing later confirms the user has already tipped,
+        // the dialog was a no-op for this launch anyway because
+        // `dialogShownThisLaunch` is set.
+        fun maybeShowTipDialog() {
+            if (dialogShownThisLaunch || isFinishing) return
+            if (::billing.isInitialized && billing.hasEverTipped) return
+            dialogShownThisLaunch = true
+            TipDialog.show(this, billing) {
+                webView.loadUrl("file:///android_asset/help.html")
             }
         }
+        billing = BillingManager(this) { maybeShowTipDialog() }
         billing.start()
+        // Fallback so the prompt always appears on a fresh install,
+        // even if Play Billing never connects.
+        webView.postDelayed({ maybeShowTipDialog() }, 1_500L)
     }
 
     override fun onDestroy() {
