@@ -2,6 +2,9 @@ package com.elyssov.archives
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -47,26 +50,35 @@ class MainActivity : ComponentActivity() {
         setContentView(webView)
         webView.loadUrl("file:///android_asset/index.html")
 
-        // Tip jar. Billing connects asynchronously; on devices without
-        // Play Services (emulator, China ROM) `onReady` may never fire.
-        // We want the prompt to appear regardless of billing state, so
-        // it ALSO surfaces after a short delay — whichever happens
-        // first. If billing later confirms the user has already tipped,
-        // the dialog was a no-op for this launch anyway because
-        // `dialogShownThisLaunch` is set.
-        fun maybeShowTipDialog() {
+        // Tip jar. Defensive: always schedule the dialog via the main-thread
+        // Handler 800 ms after onCreate. `webView.postDelayed` turned out to
+        // be unreliable on some devices (it requires the view to be attached
+        // and animation frames to start firing — if anything blocks layout,
+        // the callback can be deferred indefinitely).
+        //
+        // The `hasEverTipped` check is currently DISABLED so the dialog
+        // always shows, regardless of any cached preference state. Once
+        // we confirm the dialog is reliably appearing on the test device,
+        // we'll restore the check in a later release.
+        fun maybeShowTipDialog(source: String) {
+            Log.d("TipDialog", "maybeShowTipDialog from=$source dialogShown=$dialogShownThisLaunch finishing=$isFinishing")
             if (dialogShownThisLaunch || isFinishing) return
-            if (::billing.isInitialized && billing.hasEverTipped) return
             dialogShownThisLaunch = true
-            TipDialog.show(this, billing) {
-                webView.loadUrl("file:///android_asset/help.html")
+            try {
+                TipDialog.show(this, billing) {
+                    webView.loadUrl("file:///android_asset/help.html")
+                }
+            } catch (t: Throwable) {
+                Log.e("TipDialog", "show() failed", t)
+                dialogShownThisLaunch = false // allow retry
             }
         }
-        billing = BillingManager(this) { maybeShowTipDialog() }
+        billing = BillingManager(this) { maybeShowTipDialog("billing-onReady") }
         billing.start()
-        // Fallback so the prompt always appears on a fresh install,
-        // even if Play Billing never connects.
-        webView.postDelayed({ maybeShowTipDialog() }, 1_500L)
+        Handler(Looper.getMainLooper()).postDelayed(
+            { maybeShowTipDialog("timer-800ms") },
+            800L
+        )
     }
 
     override fun onDestroy() {
