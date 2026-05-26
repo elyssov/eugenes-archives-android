@@ -38,11 +38,64 @@ body {
   line-height: 1.75;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  /* Respect Android status bar + nav bar (Activity is edge-to-edge) */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* ===== READING THEMES =====
+   Applied to <body> via class. Only override the chrome around the reading
+   surface — sidebar styling and lightbox stay visually consistent. */
+body.theme-sepia {
+  --bg-deep: #f4ecd8;
+  --bg-card: #ede1c4;
+  --text-primary: #3a2c1f;
+  --text-secondary: #6b5640;
+  --hr-color: #c9b896;
+  --accent: #8b6f47;
+  --accent-glow: rgba(139, 111, 71, 0.12);
+  --link: #6b4f2a;
+}
+body.theme-light {
+  --bg-deep: #ffffff;
+  --bg-card: #f3f3f3;
+  --text-primary: #2a2a2a;
+  --text-secondary: #5a5a5a;
+  --hr-color: #d0d0d0;
+  --accent: #0066cc;
+  --accent-glow: rgba(0, 102, 204, 0.10);
+  --link: #0055aa;
+}
+body.theme-solarized {
+  --bg-deep: #fdf6e3;
+  --bg-card: #eee8d5;
+  --text-primary: #073642;
+  --text-secondary: #586e75;
+  --hr-color: #93a1a1;
+  --accent: #268bd2;
+  --accent-glow: rgba(38, 139, 210, 0.12);
+  --link: #b58900;
+}
+body.theme-manuscript {
+  --bg-deep: #1a1410;
+  --bg-card: #2a1f17;
+  --text-primary: #d4af37;
+  --text-secondary: #a0814f;
+  --hr-color: #5c4a2f;
+  --accent: #f4d03f;
+  --accent-glow: rgba(244, 208, 63, 0.15);
+  --link: #f4d03f;
+}
+body.theme-notebook {
+  --bg-deep: #f7f5ed;
+  --bg-card: #efebd9;
+  --text-primary: #1e2b5e;
+  --text-secondary: #4a5078;
+  --hr-color: #b8b8a8;
+  --accent: #1e2b5e;
+  --accent-glow: rgba(30, 43, 94, 0.10);
+  --link: #2a3a8a;
 }
 
 /* Vietnamese: Georgia lacks precomposed glyphs for circumflex+tone (ấ ề ố …),
@@ -79,18 +132,32 @@ html[lang="vi"] body {
 }
 
 .back-to-catalog {
-  display: block;
-  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
   color: var(--accent);
   text-decoration: none;
   margin-bottom: 0.8rem;
-  padding: 0.5rem 0;
+  padding: 0.55rem 0.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   transition: all var(--transition);
-  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
 }
-.back-to-catalog:hover { color: var(--text-primary); }
+.back-to-catalog::before {
+  content: "←";
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-block;
+}
+.back-to-catalog:active {
+  background: var(--accent);
+  color: var(--bg-deep);
+}
+.back-to-catalog:hover { background: var(--accent-glow); }
 
 .sidebar-header h1 {
   font-size: 1.1rem;
@@ -186,8 +253,7 @@ html[lang="vi"] body {
 .hamburger {
   display: none;
   position: fixed;
-  top: calc(1rem + env(safe-area-inset-top));
-  left: calc(1rem + env(safe-area-inset-left));
+  top: 1rem; left: 1rem;
   z-index: 200;
   width: 44px; height: 44px;
   background: var(--bg-card);
@@ -514,6 +580,114 @@ html[lang="vi"] body {
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ===== FLOATING FONT + THEME CONTROLS =====
+   Always-accessible buttons docked bottom-right in the reader. */
+.floating-font {
+  position: fixed;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  right: calc(0.75rem + env(safe-area-inset-right));
+  z-index: 150;
+  display: flex;
+  gap: 0.4rem;
+}
+.floating-font button {
+  width: 38px; height: 38px;
+  border-radius: 19px;
+  background: rgba(26, 34, 53, 0.85);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.floating-font button:active {
+  transform: scale(1.15);
+  background: var(--accent);
+  color: #0a0e1a;
+  border-color: var(--accent);
+}
+
+/* ===== THEME PICKER (bottom sheet) ===== */
+.theme-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 700;
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+.theme-sheet-overlay.active { display: block; }
+.theme-sheet {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  z-index: 701;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Hidden by default until JS adds .active */
+  visibility: hidden;
+}
+.theme-sheet.active {
+  transform: translateY(0);
+  visibility: visible;
+}
+.theme-sheet h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: center;
+}
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+.theme-card {
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+  font-family: 'Georgia', 'Noto Serif', serif;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 70px;
+}
+.theme-card:active { transform: scale(0.97); }
+.theme-card.active-theme { border-color: var(--accent); }
+.theme-card .name {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.theme-card .sample {
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+.theme-card.preview-night    { background: #0a0e1a; color: #e8dcc8; }
+.theme-card.preview-night .name { color: #34d399; }
+.theme-card.preview-sepia    { background: #f4ecd8; color: #3a2c1f; }
+.theme-card.preview-sepia .name { color: #8b6f47; }
+.theme-card.preview-light    { background: #ffffff; color: #2a2a2a; }
+.theme-card.preview-light .name { color: #0066cc; }
+.theme-card.preview-solarized { background: #fdf6e3; color: #073642; }
+.theme-card.preview-solarized .name { color: #b58900; }
+.theme-card.preview-manuscript { background: #1a1410; color: #d4af37; }
+.theme-card.preview-manuscript .name { color: #f4d03f; }
+.theme-card.preview-notebook { background: #f7f5ed; color: #1e2b5e; }
+.theme-card.preview-notebook .name { color: #1e2b5e; }
 
 /* Language selector — three-flag picker */
 .lang-switch {
@@ -870,18 +1044,12 @@ html[lang="vi"] body {
 .lightbox-overlay.active { display: flex; }
 
 .lightbox-overlay img {
-  max-width: 100vw;
-  max-height: 100vh;
+  max-width: 92vw;
+  max-height: 90vh;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 8px;
   box-shadow: 0 8px 48px rgba(0, 0, 0, 0.6);
   animation: fadeIn 0.3s ease;
-  /* Pinch-zoom + pan are driven by JS transforms on this img;
-     no pointer-events default behaviour interference. */
-  touch-action: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  will-change: transform;
 }
 
 .lightbox-close {
