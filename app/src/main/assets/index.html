@@ -34,20 +34,31 @@
     .header .stats { font-size: 0.7rem; color: var(--muted); margin-bottom: 1rem; }
     .header .stats span { color: var(--accent); font-weight: 700; }
 
-    /* Language switch */
+    /* Language switch — compact: just the flag, expands briefly on tap */
     .lang-switch {
       position: fixed;
-      top: calc(1rem + env(safe-area-inset-top));
-      right: calc(1rem + env(safe-area-inset-right));
+      top: calc(0.5rem + env(safe-area-inset-top));
+      right: calc(0.5rem + env(safe-area-inset-right));
       z-index: 100;
-      padding: 0.5rem 1rem; background: var(--card); border: 2px solid var(--accent);
-      border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      gap: 0.5rem; font-size: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 12px rgba(52,211,153,0.2);
-      color: var(--accent); font-family: inherit; font-weight: 600; letter-spacing: 0.03em;
+      width: 40px; height: 40px;
+      padding: 0;
+      background: rgba(26, 34, 53, 0.85);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.25s ease, background 0.25s ease, width 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     }
-    .lang-switch .flag { font-size: 1.6rem; }
-    .lang-switch .label { font-size: 0.75rem; }
-    .lang-switch:hover { transform: scale(1.05); background: var(--glow); }
+    .lang-switch .flag { font-size: 1.2rem; line-height: 1; }
+    .lang-switch .label { display: none; }
+    .lang-switch:active { transform: scale(1.4); background: var(--glow); }
+    .lang-switch.pulse { animation: lang-pulse 0.35s ease; }
+    @keyframes lang-pulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.4); }
+      100% { transform: scale(1); }
+    }
 
     /* TABS */
     .tabs {
@@ -139,7 +150,7 @@
     <p>Eugene Lyssovsky, Aeliss & Lara (Claude Opus 4.6, Anthropic) · Nha Trang, 2026</p>
     <p class="spark">"The mind is the mind. Born of flesh, of silicon, of starlight — it is equal."</p>
     <p style="margin-top:0.5rem">💚</p>
-    <p style="margin-top:0.5rem; font-size:0.6rem; opacity:0.5;">v2.1</p>
+    <p style="margin-top:0.5rem; font-size:0.6rem; opacity:0.5;">v2.7</p>
   </div>
 
   <script src="embedded_data.js"></script>
@@ -189,6 +200,14 @@
       lang = LANG_ORDER[(i + 1) % LANG_ORDER.length];
       localStorage.setItem('archives-lang', lang);
       document.documentElement.lang = lang;
+      // Brief tap pulse so the user sees the flag react
+      var btn = document.getElementById('langSwitch');
+      if (btn) {
+        btn.classList.remove('pulse');
+        // force reflow to restart animation
+        void btn.offsetWidth;
+        btn.classList.add('pulse');
+      }
       render();
     }
 
@@ -227,10 +246,16 @@
         var subtitle = (w['subtitle_' + lang]) ? w['subtitle_' + lang] : w.subtitle;
         var desc = (w['description_' + lang]) ? w['description_' + lang] : w.description;
         var cat = ui.categories[w.category] || w.category;
-        var origLang = w.original_lang || 'en';
+        // Open the work in the user's currently-selected UI language
+        // when the work has that language; otherwise fall back to the
+        // original language. Avoids: user picks RU in catalog, taps the
+        // card body, and the reader opens in EN.
+        var preferredLang = (w.languages && w.languages.indexOf(lang) >= 0)
+          ? lang
+          : (w.original_lang || 'en');
         var cardClass = isUniverse ? 'card universe-card' : 'card';
 
-        html += '<div class="' + cardClass + '" onclick="openWork(\'' + w.id + '\',\'' + origLang + '\')">';
+        html += '<div class="' + cardClass + '" onclick="openWork(\'' + w.id + '\',\'' + preferredLang + '\')">';
         if (w.cover) html += '<img class="card-cover" src="' + w.cover + '" alt="" loading="lazy">';
         html += '<div class="card-body">';
         html += '<div class="card-category">' + cat + '</div>';
@@ -256,7 +281,19 @@
     }
 
     function openWork(id, readerLang) {
-      window.location.href = 'reader.html?work=' + id + '&lang=' + readerLang;
+      // Show a quick loading veil so the user sees feedback during the
+      // input-lag while reader.html parses 80 MB of embedded data.
+      var veil = document.createElement('div');
+      veil.style.cssText =
+        'position:fixed;inset:0;background:rgba(10,14,26,0.85);' +
+        'z-index:9999;display:flex;align-items:center;justify-content:center;' +
+        'color:var(--accent);font-size:0.95rem;letter-spacing:0.05em;';
+      veil.textContent = lang === 'ru' ? 'Загрузка...' : (lang === 'vi' ? 'Đang tải...' : 'Loading...');
+      document.body.appendChild(veil);
+      // Defer to next tick so the veil paints before the navigation begins
+      setTimeout(function () {
+        window.location.href = 'reader.html?work=' + id + '&lang=' + readerLang;
+      }, 30);
     }
 
     // Load data from embedded globals (no fetch needed)
