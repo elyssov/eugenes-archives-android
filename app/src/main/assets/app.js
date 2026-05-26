@@ -133,12 +133,22 @@
             if (!catalogEntry) return '';
             return catalogEntry[field + '_' + currentLang] || catalogEntry[field] || '';
           }
+          // Cover priority: in APK (EMBEDDED) the catalog cover is a
+          // pre-encoded base64 data URI that always works offline; the
+          // manifest's `cover` is a relative path like "images/foo.png"
+          // that file:// can't resolve (no images/ alongside reader.html).
+          // Prefer catalog when embedded; on the web the manifest path is
+          // valid relative to the page and is fine to keep first.
+          var catalogCover = catalogEntry ? catalogEntry.cover : '';
+          var coverPick = EMBEDDED
+            ? (catalogCover || data.cover || '')
+            : (data.cover || catalogCover || '');
           workMeta = {
             title: data.title || localized('title'),
             subtitle: data.subtitle || localized('subtitle'),
             author: data.author || localized('author'),
             date: data.date || (catalogEntry ? catalogEntry.date : '') || '',
-            cover: data.cover || (catalogEntry ? catalogEntry.cover : '') || ''
+            cover: coverPick
           };
 
           var h = $('#readerTitle') || $('.sidebar-header h1');
@@ -167,12 +177,16 @@
           if (!catalogEntry) return '';
           return catalogEntry[field + '_' + currentLang] || catalogEntry[field] || '';
         }
+        var catalogCover = catalogEntry ? catalogEntry.cover : '';
+        var coverPick = EMBEDDED
+          ? (catalogCover || data.cover || '')
+          : (data.cover || catalogCover || '');
         workMeta = {
           title: data.title || localized('title'),
           subtitle: data.subtitle || localized('subtitle'),
           author: data.author || localized('author'),
           date: data.date || (catalogEntry ? catalogEntry.date : '') || '',
-          cover: data.cover || (catalogEntry ? catalogEntry.cover : '') || ''
+          cover: coverPick
         };
 
         var h = $('#readerTitle') || $('.sidebar-header h1');
