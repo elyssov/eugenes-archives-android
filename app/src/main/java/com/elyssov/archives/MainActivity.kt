@@ -50,19 +50,17 @@ class MainActivity : ComponentActivity() {
         setContentView(webView)
         webView.loadUrl("file:///android_asset/index.html")
 
-        // Tip jar. Defensive: always schedule the dialog via the main-thread
-        // Handler 800 ms after onCreate. `webView.postDelayed` turned out to
-        // be unreliable on some devices (it requires the view to be attached
-        // and animation frames to start firing — if anything blocks layout,
-        // the callback can be deferred indefinitely).
+        // Tip jar. Scheduled via the main-thread Handler 800 ms after
+        // onCreate (webView.postDelayed is unreliable — depends on view
+        // attachment + animation frames).
         //
-        // The `hasEverTipped` check is currently DISABLED so the dialog
-        // always shows, regardless of any cached preference state. Once
-        // we confirm the dialog is reliably appearing on the test device,
-        // we'll restore the check in a later release.
-        fun maybeShowTipDialog(source: String) {
-            Log.d("TipDialog", "maybeShowTipDialog from=$source dialogShown=$dialogShownThisLaunch finishing=$isFinishing")
+        // `hasEverTipped` is respected: once a user has tipped any amount,
+        // the prompt never appears again on this Google account, even
+        // after reinstall (BillingManager.queryPurchases on startup
+        // restores the flag from Play).
+        fun maybeShowTipDialog() {
             if (dialogShownThisLaunch || isFinishing) return
+            if (::billing.isInitialized && billing.hasEverTipped) return
             dialogShownThisLaunch = true
             try {
                 TipDialog.show(this, billing) {
@@ -70,13 +68,13 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (t: Throwable) {
                 Log.e("TipDialog", "show() failed", t)
-                dialogShownThisLaunch = false // allow retry
+                dialogShownThisLaunch = false
             }
         }
-        billing = BillingManager(this) { maybeShowTipDialog("billing-onReady") }
+        billing = BillingManager(this) { maybeShowTipDialog() }
         billing.start()
         Handler(Looper.getMainLooper()).postDelayed(
-            { maybeShowTipDialog("timer-800ms") },
+            { maybeShowTipDialog() },
             800L
         )
     }
