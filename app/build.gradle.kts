@@ -13,8 +13,8 @@ android {
         targetSdk = 35
         // versionCode is Play Store's monotonic integer (must increase each release).
         // Scheme: major*100 + minor*10 + patch. So 1.5 → 15, 1.6 → 16, 1.10 → 110.
-        versionCode = 28
-        versionName = "2.8"
+        versionCode = 29
+        versionName = "2.8.1"
     }
 
     signingConfigs {
@@ -53,6 +53,9 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.webkit:webkit:1.10.0")
+    // Транзитивно у нас тянется androidx.fragment 1.0.0 — Google Play в Pre-launch
+    // отчёт об устаревшем SDK. Закрепляем явную свежую (1.0.0 → 1.8.5).
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
 
     // Google Play Billing — for the optional tip-jar pop-up at launch.
     // Five consumable SKUs (tip_1, tip_5, tip_10, tip_15, tip_20). After
