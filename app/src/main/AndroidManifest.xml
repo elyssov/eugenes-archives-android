@@ -9,6 +9,7 @@
         android:allowBackup="true"
         android:label="Eugene's Archives"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Archives">
         <activity

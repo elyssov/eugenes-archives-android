@@ -13,11 +13,50 @@
     <span></span><span></span><span></span>
   </button>
 
+  <!-- Floating font + theme controls — always accessible without opening sidebar -->
+  <div class="floating-font">
+    <button onclick="changeFontSize(-1)" aria-label="Smaller text">A−</button>
+    <button onclick="changeFontSize(1)" aria-label="Larger text">A+</button>
+    <button onclick="openThemeSheet()" aria-label="Reading theme" title="Reading theme">🎨</button>
+  </div>
+
+  <!-- Theme picker — bottom sheet with six previews -->
+  <div class="theme-sheet-overlay" id="themeSheetOverlay" onclick="closeThemeSheet()"></div>
+  <div class="theme-sheet" id="themeSheet">
+    <h3 id="themeSheetTitle">Reading theme</h3>
+    <div class="theme-grid">
+      <div class="theme-card preview-night" data-theme="night" onclick="setTheme('night')">
+        <span class="name">Night</span>
+        <span class="sample">Cream on midnight</span>
+      </div>
+      <div class="theme-card preview-sepia" data-theme="sepia" onclick="setTheme('sepia')">
+        <span class="name">Sepia</span>
+        <span class="sample">Like paper, in sun</span>
+      </div>
+      <div class="theme-card preview-light" data-theme="light" onclick="setTheme('light')">
+        <span class="name">Light</span>
+        <span class="sample">Clean, daylight</span>
+      </div>
+      <div class="theme-card preview-solarized" data-theme="solarized" onclick="setTheme('solarized')">
+        <span class="name">Solarized</span>
+        <span class="sample">Easy on the eye</span>
+      </div>
+      <div class="theme-card preview-manuscript" data-theme="manuscript" onclick="setTheme('manuscript')">
+        <span class="name">Manuscript</span>
+        <span class="sample">Gold on black, like old codex</span>
+      </div>
+      <div class="theme-card preview-notebook" data-theme="notebook" onclick="setTheme('notebook')">
+        <span class="name">Notebook</span>
+        <span class="sample">Blue ink on paper</span>
+      </div>
+    </div>
+  </div>
+
   <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <aside class="sidebar">
     <div class="sidebar-header">
-      <a href="index.html" class="back-to-catalog">📚 Eugene's Archives — Back to Library</a>
+      <a href="index.html" class="back-to-catalog">Back to Library</a>
       <h1 id="readerTitle">Loading...</h1>
       <div class="subtitle" id="readerSubtitle"></div>
     </div>
@@ -72,6 +111,46 @@
         openLightbox(img.src);
       }
     });
+
+    // ===== READING THEME PICKER =====
+    var THEMES = ['night', 'sepia', 'light', 'solarized', 'manuscript', 'notebook'];
+
+    function applyThemeClass(name) {
+      var body = document.body;
+      THEMES.forEach(function(t) { body.classList.remove('theme-' + t); });
+      // 'night' is the default — no class needed
+      if (name && name !== 'night') body.classList.add('theme-' + name);
+      // Mark the active card in the picker
+      var cards = document.querySelectorAll('.theme-card');
+      cards.forEach(function(c) {
+        c.classList.toggle('active-theme', c.getAttribute('data-theme') === name);
+      });
+    }
+
+    function setTheme(name) {
+      if (THEMES.indexOf(name) < 0) name = 'night';
+      try { localStorage.setItem('aeliss-theme', name); } catch (e) {}
+      applyThemeClass(name);
+      // Small delay so the user sees the swap, then close the sheet
+      setTimeout(closeThemeSheet, 160);
+    }
+
+    window.openThemeSheet = function() {
+      document.getElementById('themeSheetOverlay').classList.add('active');
+      document.getElementById('themeSheet').classList.add('active');
+    };
+    window.closeThemeSheet = function() {
+      document.getElementById('themeSheetOverlay').classList.remove('active');
+      document.getElementById('themeSheet').classList.remove('active');
+    };
+    window.setTheme = setTheme;
+
+    // Restore saved theme on load
+    (function () {
+      var saved = 'night';
+      try { saved = localStorage.getItem('aeliss-theme') || 'night'; } catch (e) {}
+      applyThemeClass(saved);
+    })();
   </script>
 </body>
 </html>

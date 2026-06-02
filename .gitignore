@@ -19,3 +19,8 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# Signing keystores — NEVER commit
+*.jks
+*.keystore
+key.properties
