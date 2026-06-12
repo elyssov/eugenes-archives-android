@@ -31,7 +31,11 @@ class BillingManager(
     private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     private val client: BillingClient = BillingClient.newBuilder(context)
-        .enablePendingPurchases()
+        .enablePendingPurchases(
+            PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build()
+        )
         .setListener(this)
         .build()
 
