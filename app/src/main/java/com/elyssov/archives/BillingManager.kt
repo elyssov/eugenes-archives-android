@@ -123,8 +123,11 @@ class BillingManager(
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(products)
             .build()
-        client.queryProductDetailsAsync(params) { result, list ->
+        client.queryProductDetailsAsync(params) { result, queryResult ->
             if (result.responseCode == BillingResponseCode.OK) {
+                // Billing 8.x: callback delivers QueryProductDetailsResult,
+                // not List<ProductDetails> as in 7.x. Use .productDetailsList.
+                val list = queryResult.productDetailsList
                 productDetailsBySku = list.associateBy { it.productId }
                 Log.d(TAG, "Loaded ${list.size}/${TIP_SKUS.size} tip ProductDetails")
             } else {

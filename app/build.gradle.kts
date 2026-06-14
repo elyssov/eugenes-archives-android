@@ -13,8 +13,8 @@ android {
         targetSdk = 35
         // versionCode is Play Store's monotonic integer (must increase each release).
         // Scheme: major*100 + minor*10 + patch. So 1.5 → 15, 1.6 → 16, 1.10 → 110.
-        versionCode = 31
-        versionName = "2.8.3"
+        versionCode = 32
+        versionName = "2.8.4"
     }
 
     signingConfigs {
@@ -61,7 +61,9 @@ dependencies {
     // Five consumable SKUs (tip_1, tip_5, tip_10, tip_15, tip_20). After
     // ANY successful tip the prompt never returns; restore works through
     // queryPurchasesAsync(INAPP) on every launch (carries to a new device).
-    // 7.1.1 — обновление с 6.1.0: Google deprecated <7.x, требует обновить
-    // (12.06.2026). Breaking: enablePendingPurchases() требует Params object.
-    implementation("com.android.billingclient:billing-ktx:7.1.1")
+    // 8.0.0 — обновление с 7.1.1 (14.06.2026): Play отклоняет <7.0.0 после
+    // 31.08.2025, и предупреждает на 7.x как «устаревший SDK». 8.x — текущий
+    // активный. Наш consumable INAPP flow без alternative-billing и без
+    // subscriptions — совместим с 8.x without code changes.
+    implementation("com.android.billingclient:billing-ktx:8.0.0")
 }
