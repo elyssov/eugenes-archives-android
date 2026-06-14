@@ -2,13 +2,11 @@ package com.elyssov.archives
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -36,13 +34,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        // Cutout policy НЕ deprecated. По прежнему держим WebView подальше
-        // от выреза камеры (тестер на OnePlus 10 Pro показал, что текст
-        // лез под фронт-камеру при свободном cutout).
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode =
-                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
-        }
+        // Cutout policy: на Android 15+ Play Console помечает
+        // LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER как "unsupported edge-to-edge
+        // API". Безопасное поведение достигается через onApplyWindowInsets
+        // ниже — мы примешиваем WindowInsetsCompat.Type.displayCutout() в
+        // padding WebView, поэтому контент по-прежнему не лезет под вырез
+        // камеры (был баг на OnePlus 10 Pro в v2.8).
 
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true

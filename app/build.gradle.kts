@@ -13,8 +13,8 @@ android {
         targetSdk = 35
         // versionCode is Play Store's monotonic integer (must increase each release).
         // Scheme: major*100 + minor*10 + patch. So 1.5 → 15, 1.6 → 16, 1.10 → 110.
-        versionCode = 30
-        versionName = "2.8.2"
+        versionCode = 31
+        versionName = "2.8.3"
     }
 
     signingConfigs {
