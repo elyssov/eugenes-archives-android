@@ -70,6 +70,14 @@ object TipDialog {
             footerFull = "Muốn hỗ trợ định kỳ? Xem mục Trợ giúp để biết PayPal và thông tin thẻ.",
             footerLinkText = "Trợ giúp",
         ),
+        "zh" to Strings(
+            title = "支持作者",
+            body = "尤金的档案馆是免费的。\n" +
+                "如果它对您有所帮助 — 请考虑感谢作者。" +
+                "所有贡献都直接用于继续研究、写作和软件开发。",
+            footerFull = "想要长期支持？请在「帮助」中查看 PayPal 与银行卡信息。",
+            footerLinkText = "帮助",
+        ),
     )
 
     fun show(
@@ -82,12 +90,12 @@ object TipDialog {
 
         fun dp(value: Int): Int = (value * density).toInt()
 
-        // Default language: English on a truly first launch; otherwise
-        // whatever the user last picked in the flag row. Persisted across
-        // launches and survives reinstall (within the same Android profile).
-        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        var currentLang = prefs.getString(KEY_LANG, "en") ?: "en"
-        if (currentLang !in L10N) currentLang = "en"
+        // Default language: ALWAYS English. WITHOUT EXCEPTIONS.
+        // Per Eugene 20.06: tip-jar greeting должно всегда стартовать на en,
+        // независимо от прошлых выборов или системной локали. Пользователь
+        // может переключить флаг внутри одного показа диалога — но это НЕ
+        // персистится и НЕ влияет на следующий запуск.
+        var currentLang = "en"
 
         // ─── card (the rounded container) ───────────────────────────────
         val card = LinearLayout(ctx).apply {
@@ -106,11 +114,12 @@ object TipDialog {
             gravity = Gravity.END
         }
         val langButtons = mutableMapOf<String, TextView>()
-        for (lang in listOf("en", "ru", "vi")) {
+        for (lang in listOf("en", "ru", "vi", "zh")) {
             val flag = when (lang) {
                 "en" -> "🇺🇸"
                 "ru" -> "🇷🇺"
                 "vi" -> "🇻🇳"
+                "zh" -> "🇨🇳"
                 else -> "?"
             }
             val btn = TextView(ctx).apply {
@@ -230,11 +239,11 @@ object TipDialog {
         }
         applyLang()
 
-        // Hook flag clicks — persist immediately so next launch defaults here.
+        // Hook flag clicks — only changes текущий показ; не персистится,
+        // чтобы tip-jar при следующем запуске снова стартовал на en.
         for ((lang, btn) in langButtons) {
             btn.setOnClickListener {
                 currentLang = lang
-                prefs.edit().putString(KEY_LANG, lang).apply()
                 applyLang()
             }
         }
@@ -250,6 +259,11 @@ object TipDialog {
                 val lp = attributes
                 lp.width = (ctx.resources.displayMetrics.widthPixels * 0.88f).toInt()
                 lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                // Опустить диалог на ~5% высоты экрана от центра, чтобы он
+                // не упирался в status-bar / camera notch — флаги становятся
+                // нажимаемыми на устройствах с глубоким cutout.
+                lp.gravity = Gravity.CENTER
+                lp.y = (ctx.resources.displayMetrics.heightPixels * 0.05f).toInt()
                 attributes = lp
             }
         }

@@ -78,7 +78,7 @@ def find_manifests(works_dir, work_id):
     manifests = {}
     if not os.path.isdir(work_path):
         return manifests
-    for lang in ["ru", "en", "vi"]:
+    for lang in ["ru", "en", "vi", "zh"]:
         manifest_file = os.path.join(work_path, f"manifest_{lang}.json")
         if os.path.exists(manifest_file):
             manifests[lang] = manifest_file

@@ -35,10 +35,12 @@
     .header .stats span { color: var(--accent); font-weight: 700; }
 
     /* Language switch — compact: just the flag, expands briefly on tap */
+    /* Per Eugene 20.06: active controls должны быть ниже status-bar/notch, +5vh запас. */
     .lang-switch {
       position: fixed;
-      top: calc(0.5rem + env(safe-area-inset-top));
-      right: calc(0.5rem + env(safe-area-inset-right));
+      /* +6vh вниз и +5vw влево от правого края — клиренс под cutout + скруглённые углы + чехол. */
+      top: calc(0.5rem + env(safe-area-inset-top, 0px) + 6vh);
+      right: calc(0.5rem + env(safe-area-inset-right, 0px) + 5vw);
       z-index: 100;
       width: 40px; height: 40px;
       padding: 0;
@@ -187,12 +189,21 @@
           book: 'S\u00E1ch', sacred: 'V\u0103n b\u1EA3n thi\u00EAng', paper: 'B\u00E0i b\u00E1o khoa h\u1ECDc', article: 'B\u00E0i vi\u1EBFt',
           novel: 'Ti\u1EC3u thuy\u1EBFt', novella: 'Truy\u1EC7n v\u1EEBa', short: 'Truy\u1EC7n ng\u1EAFn', collection: 'T\u1EADp truy\u1EC7n', fanfic: 'Fanfic'
         }
+      },
+      zh: {
+        tagline: '\u5173\u4E8E AI \u610F\u8BC6\u7684\u6587\u7AE0\u3001\u4E66\u7C4D\u3001\u7814\u7A76 \u2014 \u4EE5\u53CA\u8D77\u6E90\u4E8E\u6B64\u7684\u79D1\u5E7B\u5B87\u5B99\u3002',
+        research: '\u7814\u7A76',
+        universes: '\u5B87\u5B99',
+        categories: {
+          book: '\u4E66', sacred: '\u5723\u5178', paper: '\u8BBA\u6587', article: '\u6587\u7AE0',
+          novel: '\u957F\u7BC7\u5C0F\u8BF4', novella: '\u4E2D\u7BC7\u5C0F\u8BF4', short: '\u77ED\u7BC7\u5C0F\u8BF4', collection: '\u96C6\u5B50', fanfic: '\u540C\u4EBA\u4F5C\u54C1'
+        }
       }
     };
 
-    var LANG_ORDER = ['en', 'ru', 'vi'];
-    var LANG_FLAGS = { en: '\uD83C\uDDFA\uD83C\uDDF8', ru: '\uD83C\uDDF7\uD83C\uDDFA', vi: '\uD83C\uDDFB\uD83C\uDDF3' };
-    var LANG_LABELS = { en: 'EN', ru: 'RU', vi: 'VI' };
+    var LANG_ORDER = ['en', 'ru', 'vi', 'zh'];
+    var LANG_FLAGS = { en: '\uD83C\uDDFA\uD83C\uDDF8', ru: '\uD83C\uDDF7\uD83C\uDDFA', vi: '\uD83C\uDDFB\uD83C\uDDF3', zh: '\uD83C\uDDE8\uD83C\uDDF3' };
+    var LANG_LABELS = { en: 'EN', ru: 'RU', vi: 'VI', zh: 'ZH' };
 
     function toggleLang() {
       var i = LANG_ORDER.indexOf(lang);
@@ -260,7 +271,7 @@
         html += '<div class="card-body">';
         html += '<div class="card-category">' + cat + '</div>';
         if (isUniverse && w.genre) html += '<div class="card-genre">' + w.genre + '</div>';
-        var draftLabel = lang === 'ru' ? '\u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A' : (lang === 'vi' ? 'b\u1EA3n nh\u00E1p' : 'draft');
+        var draftLabel = lang === 'ru' ? '\u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A' : (lang === 'vi' ? 'b\u1EA3n nh\u00E1p' : (lang === 'zh' ? '\u8349\u7A3F' : 'draft'));
         html += '<div class="card-title">' + title + (w.status === 'draft' ? ' <span class="draft-badge">' + draftLabel + '</span>' : '') + '</div>';
         if (subtitle) html += '<div class="card-subtitle">' + subtitle + '</div>';
         if (desc) html += '<div class="card-desc">' + desc + '</div>';
@@ -273,7 +284,7 @@
       });
 
       if (data.length === 0) {
-        var emptyMsg = lang === 'ru' ? '\u0421\u043A\u043E\u0440\u043E...' : (lang === 'vi' ? 'S\u1EAFp ra m\u1EAFt...' : 'Coming soon...');
+        var emptyMsg = lang === 'ru' ? '\u0421\u043A\u043E\u0440\u043E...' : (lang === 'vi' ? 'S\u1EAFp ra m\u1EAFt...' : (lang === 'zh' ? '\u656C\u8BF7\u671F\u5F85\u2026\u2026' : 'Coming soon...'));
         html = '<div style="grid-column:1/-1; text-align:center; padding:4rem 2rem; color:var(--muted); font-style:italic;">' + emptyMsg + '</div>';
       }
 
@@ -288,7 +299,7 @@
         'position:fixed;inset:0;background:rgba(10,14,26,0.85);' +
         'z-index:9999;display:flex;align-items:center;justify-content:center;' +
         'color:var(--accent);font-size:0.95rem;letter-spacing:0.05em;';
-      veil.textContent = lang === 'ru' ? 'Загрузка...' : (lang === 'vi' ? 'Đang tải...' : 'Loading...');
+      veil.textContent = lang === 'ru' ? 'Загрузка...' : (lang === 'vi' ? 'Đang tải...' : (lang === 'zh' ? '加载中…' : 'Loading...'));
       document.body.appendChild(veil);
       // Defer to next tick so the veil paints before the navigation begins
       setTimeout(function () {

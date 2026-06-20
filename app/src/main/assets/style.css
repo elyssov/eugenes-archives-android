@@ -126,7 +126,7 @@ html[lang="vi"] body {
 }
 
 .sidebar-header {
-  padding: 2rem 1.5rem 1rem;
+  padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem 1rem;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -253,7 +253,8 @@ html[lang="vi"] body {
 .hamburger {
   display: none;
   position: fixed;
-  top: 1rem; left: 1rem;
+  top: calc(1rem + env(safe-area-inset-top, 0px) + 6vh);
+  left: calc(1rem + env(safe-area-inset-left, 0px) + 5vw);
   z-index: 200;
   width: 44px; height: 44px;
   background: var(--bg-card);
@@ -585,8 +586,8 @@ html[lang="vi"] body {
    Always-accessible buttons docked bottom-right in the reader. */
 .floating-font {
   position: fixed;
-  bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  right: calc(0.75rem + env(safe-area-inset-right));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px) + 5vh);
+  right: calc(0.75rem + env(safe-area-inset-right, 0px) + 5vw);
   z-index: 150;
   display: flex;
   gap: 0.4rem;
