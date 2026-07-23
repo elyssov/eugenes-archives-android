@@ -5,16 +5,16 @@ plugins {
 
 android {
     namespace = "com.elyssov.archives"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.elyssov.eugenesarchives"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         // versionCode is Play Store's monotonic integer (must increase each release).
         // Scheme: major*100 + minor*10 + patch. So 1.5 → 15, 1.6 → 16, 1.10 → 110.
-        versionCode = 36
-        versionName = "2.9.2"
+        versionCode = 37
+        versionName = "2.9.3"
     }
 
     signingConfigs {
