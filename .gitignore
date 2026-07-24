@@ -24,3 +24,6 @@ Thumbs.db
 *.jks
 *.keystore
 key.properties
+
+hs_err_pid*.log
+replay_pid*.log
