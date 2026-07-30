@@ -253,8 +253,8 @@ html[lang="vi"] body {
 .hamburger {
   display: none;
   position: fixed;
-  top: calc(1rem + env(safe-area-inset-top, 0px) + 6vh);
-  left: calc(1rem + env(safe-area-inset-left, 0px) + 5vw);
+  top: calc(1rem + env(safe-area-inset-top, 0px));
+  left: calc(1rem + env(safe-area-inset-left, 0px));
   z-index: 200;
   width: 44px; height: 44px;
   background: var(--bg-card);
@@ -586,8 +586,8 @@ html[lang="vi"] body {
    Always-accessible buttons docked bottom-right in the reader. */
 .floating-font {
   position: fixed;
-  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px) + 5vh);
-  right: calc(0.75rem + env(safe-area-inset-right, 0px) + 5vw);
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  right: calc(0.75rem + env(safe-area-inset-right));
   z-index: 150;
   display: flex;
   gap: 0.4rem;
@@ -693,7 +693,7 @@ html[lang="vi"] body {
 /* Language selector — three-flag picker */
 .lang-switch {
   display: flex;
-  gap: 0.2rem;
+  gap: 0.3rem;
   margin-left: 8px;
 }
 
@@ -702,11 +702,19 @@ html[lang="vi"] body {
   border: 2px solid transparent;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 1.15rem;
+  font-size: 0.75rem;
   line-height: 1;
-  padding: 0.2rem 0.3rem;
-  filter: grayscale(0.8);
-  opacity: 0.55;
+  padding: 0.35rem 0.5rem;
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  min-width: 4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  filter: grayscale(0.35);
+  opacity: 0.75;
   transition: all var(--transition);
 }
 
