@@ -13,8 +13,8 @@ android {
         targetSdk = 36
         // versionCode is Play Store's monotonic integer (must increase each release).
         // Scheme: major*100 + minor*10 + patch. So 1.5 → 15, 1.6 → 16, 1.10 → 110.
-        versionCode = 38
-        versionName = "2.9.4"
+        versionCode = 39
+        versionName = "2.9.5"
     }
 
     signingConfigs {
@@ -57,13 +57,4 @@ dependencies {
     // отчёт об устаревшем SDK. Закрепляем явную свежую (1.0.0 → 1.8.5).
     implementation("androidx.fragment:fragment-ktx:1.8.5")
 
-    // Google Play Billing — for the optional tip-jar pop-up at launch.
-    // Five consumable SKUs (tip_1, tip_5, tip_10, tip_15, tip_20). After
-    // ANY successful tip the prompt never returns; restore works through
-    // queryPurchasesAsync(INAPP) on every launch (carries to a new device).
-    // 8.0.0 — обновление с 7.1.1 (14.06.2026): Play отклоняет <7.0.0 после
-    // 31.08.2025, и предупреждает на 7.x как «устаревший SDK». 8.x — текущий
-    // активный. Наш consumable INAPP flow без alternative-billing и без
-    // subscriptions — совместим с 8.x without code changes.
-    implementation("com.android.billingclient:billing-ktx:8.0.0")
 }

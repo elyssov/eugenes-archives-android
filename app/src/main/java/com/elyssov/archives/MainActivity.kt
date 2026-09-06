@@ -18,11 +18,8 @@ import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : ComponentActivity() {
     private lateinit var webView: WebView
-    private lateinit var billing: BillingManager
-
-    /** Guard so the tip dialog never re-appears within a single launch
-     *  (e.g. on rotation, or a second BillingManager onReady callback). */
-    private var dialogShownThisLaunch = false
+    private var supportDialogOpen = false
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,37 +76,37 @@ class MainActivity : ComponentActivity() {
 
         webView.loadUrl("file:///android_asset/index.html")
 
-        // Tip jar. Scheduled via the main-thread Handler 800 ms after
-        // onCreate (webView.postDelayed is unreliable — depends on view
-        // attachment + animation frames).
-        //
-        // `hasEverTipped` is respected: once a user has tipped any amount,
-        // the prompt never appears again on this Google account, even
-        // after reinstall (BillingManager.queryPurchases on startup
-        // restores the flag from Play).
-        fun maybeShowTipDialog() {
-            if (dialogShownThisLaunch || isFinishing) return
-            if (::billing.isInitialized && billing.hasEverTipped) return
-            dialogShownThisLaunch = true
+        // Voluntary studio support. Delayed long enough that the reader has
+        // had time to enter the archive before the one-time request appears.
+        lateinit var maybeShowSupportDialog: () -> Unit
+        fun scheduleSupport(delayMs: Long) {
+            mainHandler.postDelayed({ maybeShowSupportDialog() }, delayMs)
+        }
+        maybeShowSupportDialog = show@{
+            if (supportDialogOpen || isFinishing || isDestroyed || SupportDialog.isAcknowledged(this)) return@show
+            supportDialogOpen = true
             try {
-                TipDialog.show(this, billing) {
-                    webView.loadUrl("file:///android_asset/help.html")
-                }
+                SupportDialog.show(
+                    activity = this,
+                    onHelpRequested = { webView.loadUrl("file:///android_asset/help.html") },
+                    onDismiss = {
+                    supportDialogOpen = false
+                    if (!isFinishing && !isDestroyed && !SupportDialog.isAcknowledged(this)) {
+                        scheduleSupport(SUPPORT_REPEAT_MS)
+                    }
+                    },
+                )
             } catch (t: Throwable) {
-                Log.e("TipDialog", "show() failed", t)
-                dialogShownThisLaunch = false
+                Log.e("SupportDialog", "show() failed", t)
+                supportDialogOpen = false
+                scheduleSupport(SUPPORT_REPEAT_MS)
             }
         }
-        billing = BillingManager(this) { maybeShowTipDialog() }
-        billing.start()
-        Handler(Looper.getMainLooper()).postDelayed(
-            { maybeShowTipDialog() },
-            800L
-        )
+        scheduleSupport(SUPPORT_FIRST_DELAY_MS)
     }
 
     override fun onDestroy() {
-        if (::billing.isInitialized) billing.release()
+        mainHandler.removeCallbacksAndMessages(null)
         super.onDestroy()
     }
 
@@ -127,5 +124,10 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton("Exit") { _, _ -> super.onBackPressed() }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    companion object {
+        private const val SUPPORT_FIRST_DELAY_MS = 5 * 60 * 1000L
+        private const val SUPPORT_REPEAT_MS = 10 * 60 * 1000L
     }
 }
